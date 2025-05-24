@@ -15,7 +15,7 @@ export default defineConfig({
   },
   server: {
     port: 3001,
-    open: true,
+    open: false,
     // 配置跨域代理
     proxy: {
       '/api': {

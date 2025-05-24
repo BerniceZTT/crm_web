@@ -15,12 +15,12 @@ export default defineConfig({
   },
   server: {
     port: 3001,
+    host: '0.0.0.0', // 关键修改：允许外部访问
     open: false,
-    // 配置跨域代理
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
-        // target: 'http://47.113.230.108:8080',
+        // target: 'http://47.113.230.108:8080', // 改为你的后端真实地址
         changeOrigin: true,
         secure: false,
       }

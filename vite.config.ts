@@ -24,7 +24,12 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
       }
-    }
+    },
+    watch: {
+      // 只监听 src 目录，减少不必要的文件扫描
+      ignored: ["**/node_modules/**", "**/.git/**", "**/dist/**"],
+      usePolling: false, // 关闭轮询（减少 IO）
+    },
   },
   // 定义环境变量
   define: {

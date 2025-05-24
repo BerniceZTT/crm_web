@@ -1,0 +1,56 @@
+# 依赖目录
+node_modules/
+.pnp
+.pnp.js
+
+# 构建产物
+dist/
+build/
+.next/
+out/
+
+# 缓存文件
+.cache/
+.turbo/
+.rts2_cache*
+
+# 日志文件
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# 环境变量
+.env*.local
+.env
+.env.development
+.env.production
+.env.test
+
+# IDE/编辑器配置
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# TypeScript 编译缓存
+*.tsbuildinfo
+
+# 测试覆盖率
+coverage/
+.nyc_output/
+
+# 包管理器特定文件
+yarn.lock
+package-lock.json
+# pnpm-lock.yaml
+
+# 可选的本地调试配置
+.local-*

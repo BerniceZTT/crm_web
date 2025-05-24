@@ -1,0 +1,245 @@
+/* 全局样式定义 */
+
+/* 设置默认字体和颜色 */
+body {
+  font-family: 'Nunito', 'Helvetica Neue', Arial, sans-serif;
+  color: #1f2937;
+  background-color: #f8fafc;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* 按钮样式优化 */
+.ant-btn {
+  /* 通用按钮样式 */
+  font-weight: 500;
+  border-radius: 6px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 主按钮样式 */
+.ant-btn-primary {
+  background: linear-gradient(to bottom, #5552ff, #4f46e5);
+  border-color: #4338ca;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+}
+
+.ant-btn-primary:hover {
+  background: linear-gradient(to bottom, #4338ca, #3730a3);
+  border-color: #3730a3;
+  box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
+  transform: translateY(-1px);
+}
+
+.ant-btn-primary:active {
+  background: #3730a3;
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(79, 70, 229, 0.3);
+}
+
+/* 次级按钮样式 */
+.ant-btn-default {
+  border-color: #e5e7eb;
+  background: linear-gradient(to bottom, #ffffff, #f9fafb);
+}
+
+.ant-btn-default:hover {
+  border-color: #4f46e5;
+  color: #4f46e5;
+  background: linear-gradient(to bottom, #ffffff, #f3f4f6);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transform: translateY(-1px);
+}
+
+.ant-btn-default:active {
+  border-color: #4338ca;
+  color: #4338ca;
+  background: #f9fafb;
+  transform: translateY(0);
+}
+
+/* 按钮图标对齐 */
+.ant-btn .anticon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ant-btn > .anticon + span,
+.ant-btn > span + .anticon {
+  margin-left: 8px;
+}
+
+/* 移动端按钮样式增强 */
+@media (max-width: 767px) {
+  .ant-btn {
+    font-size: 15px;
+    height: 38px; /* 移动端按钮高度增加 */
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+  
+  .ant-btn-sm {
+    font-size: 14px;
+    height: 32px;
+    padding-left: 8px;
+    padding-right: 8px;
+  }
+  
+  .ant-btn-lg {
+    font-size: 16px;
+    height: 44px;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  /* 确保图标和文字在移动端对齐 */
+  .ant-btn .anticon {
+    font-size: 16px;
+    height: 16px;
+    line-height: 0;
+    vertical-align: -0.125em;
+  }
+  
+  /* 为移动端按钮增加触摸反馈面积 */
+  .ant-btn-primary {
+    font-weight: 600;
+  }
+}
+
+/* 表单相关控件样式统一 */
+.ant-input,
+.ant-select .ant-select-selector {
+  border-radius: 6px;
+  transition: all 0.3s;
+}
+
+.ant-input:hover,
+.ant-select:hover .ant-select-selector {
+  border-color: #4f46e5;
+}
+
+.ant-input:focus,
+.ant-input-focused,
+.ant-select-focused .ant-select-selector {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2);
+}
+
+/* 卡片和阴影效果 */
+.card-with-hover-effect {
+  transition: all 0.3s;
+}
+
+.card-with-hover-effect:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* 渐变文本效果 */
+.text-gradient {
+  background-image: linear-gradient(135deg, #4f46e5, #8b5cf6);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+/* 自定义下拉菜单样式 */
+.custom-dropdown .ant-dropdown-menu {
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+}
+
+/* 优化菜单悬停样式 */
+.menu-with-hover-effect .ant-menu-item:hover {
+  background-color: rgba(79, 70, 229, 0.05);
+  color: #4f46e5;
+}
+
+.menu-with-hover-effect .ant-menu-item-selected {
+  background-color: rgba(79, 70, 229, 0.1);
+  color: #4f46e5;
+  font-weight: 600;
+}
+
+/* 表格行交替颜色 */
+.ant-table-tbody > tr.ant-table-row:nth-child(even) {
+  background-color: #f9fafb;
+}
+
+.ant-table-tbody > tr.ant-table-row:hover > td {
+  background-color: #eef2ff !important;
+}
+
+/* 搜索输入框样式优化 */
+.search-input .ant-input-prefix {
+  margin-right: 8px;
+}
+
+.search-input:hover .ant-input-prefix {
+  color: #4f46e5;
+}
+
+/* 筛选折叠面板样式优化 */
+.filter-collapse .ant-collapse-header {
+  padding: 8px 0 !important;
+}
+
+.filter-collapse .ant-collapse-content-box {
+  padding: 8px 0 !important;
+}
+
+/* 自定义选择器样式 */
+.custom-select .ant-select-selector {
+  border-radius: 6px !important;
+}
+
+/* 标签样式优化 */
+.ant-tag {
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 12px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* 在手机上调整部分样式 */
+@media (max-width: 767px) {
+  .ant-modal-footer {
+    display: flex;
+    gap: 8px;
+  }
+  
+  .ant-modal-footer .ant-btn {
+    flex: 1;
+  }
+  
+  .ant-form-item-label {
+    padding-bottom: 4px;
+  }
+  
+  /* 增加表格触摸区域 */
+  .ant-table-tbody > tr > td {
+    padding-top: 10px;
+    padding-bottom: 10px;
+  }
+  
+  /* 小屏幕上更好的菜单体验 */
+  .ant-dropdown-menu-item, 
+  .ant-menu-item {
+    padding: 10px 12px;
+    min-height: 42px;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* 提高对比度 */
+  .text-xs {
+    font-size: 13px;
+  }
+}

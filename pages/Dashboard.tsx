@@ -359,7 +359,7 @@ const Dashboard: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.1 }}
           >
             <Card 
-              title={<Text strong>产品包装类型分布</Text>}
+              title={<Text strong>产品封装类型分布</Text>}
               bordered={false} 
               className="h-full shadow-sm hover:shadow-md transition-all"
               size={isMobile ? "small" : "default"}

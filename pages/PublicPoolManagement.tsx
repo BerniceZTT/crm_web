@@ -144,14 +144,14 @@ const PublicPoolManagement: React.FC = () => {
         agentId: selectedAgentId
       });
 
-      message.success(isSuperAdmin ? '客户分配成功' : '客户认领成功');
+      message.success(isSuperAdmin ? '客户分配成功' : '客户跟进成功');
       setAssignModalVisible(false);
       
       clearCustomerCaches();
       refreshPublicPool(true); 
     } catch (error) {
       console.error('Operation failed:', error);
-      message.error(error.error || (isSuperAdmin ? '分配失败' : '认领失败'));
+      message.error(error.error || (isSuperAdmin ? '分配失败' : '跟进失败'));
     }
   };
   
@@ -242,25 +242,25 @@ const PublicPoolManagement: React.FC = () => {
         </span>
       )
     },
-    {
-      title: '创建人',
-      dataIndex: 'creatorName',
-      key: 'creatorName',
-      responsive: ['lg'],
-      render: (creatorName: string, record: PublicPoolCustomer) => (
-        <span>
-          <UserOutlined className="mr-1 text-blue-500" />
-          {creatorName || '未知'} 
-          {record.creatorType && (
-            <Tag color="blue" className="ml-1" size="small">
-              {record.creatorType === 'FACTORY_SALES' ? '销售' : 
-               record.creatorType === 'AGENT' ? '代理商' : 
-               record.creatorType === 'SUPER_ADMIN' ? '管理员' : record.creatorType}
-            </Tag>
-          )}
-        </span>
-      )
-    },
+    // {
+    //   title: '创建人',
+    //   dataIndex: 'creatorName',
+    //   key: 'creatorName',
+    //   responsive: ['lg'],
+    //   render: (creatorName: string, record: PublicPoolCustomer) => (
+    //     <span>
+    //       <UserOutlined className="mr-1 text-blue-500" />
+    //       {creatorName || '未知'} 
+    //       {record.creatorType && (
+    //         <Tag color="blue" className="ml-1" size="small">
+    //           {record.creatorType === 'FACTORY_SALES' ? '销售' : 
+    //            record.creatorType === 'AGENT' ? '代理商' : 
+    //            record.creatorType === 'SUPER_ADMIN' ? '管理员' : record.creatorType}
+    //         </Tag>
+    //       )}
+    //     </span>
+    //   )
+    // },
     {
       title: '进入公海时间',
       dataIndex: 'enterPoolTime',
@@ -285,7 +285,7 @@ const PublicPoolManagement: React.FC = () => {
             onClick={() => showAssignModal(record)}
             style={{ color: '#ffffff' }}
           >
-            {isMobile ? "" : (isSuperAdmin ? '分配' : '认领')}
+            {isMobile ? "" : (isSuperAdmin ? '分配' : '跟进')}
           </Button>
         )}
       </Space>
@@ -301,7 +301,7 @@ const PublicPoolManagement: React.FC = () => {
     <div>
       <p>1. 客户从录入后三个月未进入打样测试阶段，进入公海</p>
       <p>2. 公海客户保留原销售和代理商信息，便于追溯</p>
-      <p>3. 公海客户可被管理员分配或销售/代理商认领</p>
+      <p>3. 公海客户可被管理员分配或销售/代理商跟进</p>
     </div>
   );
   
@@ -406,7 +406,7 @@ const PublicPoolManagement: React.FC = () => {
       </Card>
       
       <Modal
-        title={isSuperAdmin ? "分配客户" : "认领客户"}
+        title={isSuperAdmin ? "分配客户" : "跟进客户"}
         open={assignModalVisible}
         onCancel={() => setAssignModalVisible(false)}
         footer={[
@@ -421,14 +421,14 @@ const PublicPoolManagement: React.FC = () => {
             loading={isAssignableLoading}
             style={{ color: '#ffffff' }}
           >
-            {isSuperAdmin ? "确认分配" : "确认认领"}
+            {isSuperAdmin ? "确认分配" : "确认跟进"}
           </Button>
         ]}
         width={isMobile ? '100%' : 600}
         style={isMobile ? { top: 20 } : undefined}
       >
         <div className="mb-4">
-          <Text strong>您即将{isSuperAdmin ? "分配" : "认领"}以下客户：</Text>
+          <Text strong>您即将{isSuperAdmin ? "分配" : "跟进"}以下客户：</Text>
           <div className="mt-2 p-3 bg-blue-50 rounded">
             <p><Text strong>客户名称：</Text> {currentCustomer?.name}</p>
             <p><Text strong>客户性质：</Text> {currentCustomer?.nature}</p>
@@ -533,7 +533,7 @@ const PublicPoolManagement: React.FC = () => {
                   <div className="flex items-center mb-1">
                     <TeamOutlined className="text-blue-500 mr-2" />
                     <Text>
-                      将客户 <Text strong>{currentCustomer?.name}</Text> {isSuperAdmin ? "分配给销售：" : "认领为销售负责："}
+                      将客户 <Text strong>{currentCustomer?.name}</Text> {isSuperAdmin ? "分配给销售：" : "跟进为销售负责："}
                       <Text strong className="text-blue-500">{getSalesName()}</Text>
                     </Text>
                   </div>
@@ -543,7 +543,7 @@ const PublicPoolManagement: React.FC = () => {
                   <div className="flex items-center">
                     <ShopOutlined className="text-green-500 mr-2" />
                     <Text>
-                      将客户 <Text strong>{currentCustomer?.name}</Text> {isSuperAdmin ? "分配给代理商：" : "认领为代理商负责："}
+                      将客户 <Text strong>{currentCustomer?.name}</Text> {isSuperAdmin ? "分配给代理商：" : "跟进为代理商负责："}
                       <Text strong className="text-green-500">{getAgentName()}</Text>
                     </Text>
                   </div>
@@ -555,9 +555,9 @@ const PublicPoolManagement: React.FC = () => {
         
         <div className="mt-4">
           <Collapse ghost>
-            <Panel header="分配/认领说明" key="1">
+            <Panel header="分配/跟进说明" key="1">
               <ul className="pl-4 m-0">
-                <li>分配/认领后，客户将从公海中移除并归入负责人客户库</li>
+                <li>分配/跟进后，客户将从公海中移除并归入负责人客户库</li>
                 <li>系统将记录此次操作信息，包括操作人和时间</li>
                 <li>此操作不可撤销，请确认后操作</li>
                 {selectedSalesId && !isMobile && (

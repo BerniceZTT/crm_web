@@ -159,7 +159,7 @@ const Login: React.FC = () => {
         className="hover:shadow-xl"
       >
         <div className="text-center mb-8">
-          <Title level={2} className="text-indigo-600 mb-2">企业级CRM系统</Title>
+          <Title level={2} className="text-indigo-600 mb-2">乾芯CRM系统</Title>
           <Title level={4} className="font-normal text-gray-500 mt-0">账号登录</Title>
         </div>
 
@@ -196,8 +196,8 @@ const Login: React.FC = () => {
           <Form.Item
             name="username"
             rules={[
-              { required: true, message: '请输入用户名' },
-              { min: 2, message: '用户名至少2个字符' }
+              { required: true, message: '请输入用户名/代理商名' },
+              { min: 2, message: '用户名/代理商名至少2个字符' }
             ]}
           >
             <Input

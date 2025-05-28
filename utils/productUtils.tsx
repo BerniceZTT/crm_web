@@ -2,15 +2,18 @@
  * 产品管理工具函数
  * 包含数据格式化、表格列配置等功能函数
  */
-import React from 'react';
-import { Tag, Button, Space, Badge } from 'antd';
+import React, { useState } from 'react';
+import { Tag, Button, Space, Badge, Popconfirm } from 'antd';
 import { 
   EyeOutlined, 
   EditOutlined, 
   ImportOutlined,
   ArrowUpOutlined,
   ArrowDownOutlined,
-  InfoCircleOutlined
+  InfoCircleOutlined,
+  DownOutlined,
+  UpOutlined,
+  DeleteOutlined
 } from '@ant-design/icons';
 import { Product, PricingTier } from '../shared/types';
 import ResponsiveTooltip from '../components/common/ResponsiveTooltip';
@@ -41,27 +44,99 @@ export const renderStockTag = (stock: number) => {
   } else if (stock < 200) {
     color = 'orange';
   }
-  
+
   return <Tag color={color}>{stock}</Tag>;
+};
+
+// 价格详情可折叠组件
+export const PriceDetail: React.FC<{ 
+  pricing: PricingTier[], 
+  needRed: boolean 
+}> = ({ pricing, needRed }) => {
+  const [expanded, setExpanded] = useState(true);
+
+  if (!pricing || pricing.length === 0) {
+    return <span style={{ color: needRed ? '#ff4d4f' : 'inherit' }}>暂无价格</span>;
+  }
+
+  // 计算最低价格
+  const minPrice = pricing.reduce((min, tier) => 
+    tier.price < min ? tier.price : min, 
+    pricing[0]?.price || 0
+  );
+
+  // 根据数量排序价格区间
+  const sortedPricing = [...pricing].sort((a, b) => a.quantity - b.quantity);
+
+  // 动态文字颜色
+  const textStyle = {
+    color: needRed ? '#ff4d4f' : 'inherit',
+  };
+
+  return (
+    <div className="price-detail" style={textStyle}>
+      <div className="flex items-center">
+        <span className="font-medium mr-2">¥{minPrice.toFixed(2)}</span>
+        <Button 
+          type="link" 
+          size="small" 
+          onClick={() => setExpanded(!expanded)} 
+          className="p-0"
+          icon={expanded ? <UpOutlined /> : <DownOutlined />}
+          style={textStyle}
+        >
+          {expanded ? '收起' : '详情'}
+        </Button>
+      </div>
+
+      {expanded && (
+        <div className="mt-1 border-t pt-1">
+          {sortedPricing.map((tier, index) => {
+            const tierInfo = PRICING_TIERS.find(t => t.value === tier.quantity);
+            const displayText = tierInfo ? tierInfo.display : `${formatNumber(tier.quantity)}+`;
+
+            return (
+              <div key={index} className="flex justify-between text-xs py-1">
+                <span>¥{displayText}:</span>
+                <span className="font-medium">¥{tier.price.toFixed(2)}</span>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
 };
 
 // 获取产品表格列配置
 export const getProductColumns = (
   hasEditPermission: boolean,
+  isSuperAdmin: boolean,
   showModal: (product?: Product, isViewMode?: boolean) => void,
   showInventoryModal: (product: Product) => void,
+  handleDelete: (id: string) => void,
 ) => {
+  const renderRedText = (text: string, record: Product) => {
+    return (
+      <span style={{ color: record.stock <= 5000 ? '#ff4d4f' : 'inherit' }}>
+        {text}
+      </span>
+    );
+  };
+
   return [
     {
       title: '产品型号',
       dataIndex: 'modelName',
       key: 'modelName',
-      sorter: (a: Product, b: Product) => a.modelName.localeCompare(b.modelName)
+      render: (text: string, record: Product) => renderRedText(text, record),
+      sorter: (a: Product, b: Product) => a.modelName.localeCompare(b.modelName),
     },
     {
       title: '封装型号',
       dataIndex: 'packageType',
       key: 'packageType',
+      render: (text: string, record: Product) => renderRedText(text, record),
       sorter: (a: Product, b: Product) => a.packageType.localeCompare(b.packageType)
     },
     {
@@ -72,17 +147,10 @@ export const getProductColumns = (
       sorter: (a: Product, b: Product) => a.stock - b.stock
     },
     {
-      title: '最低单价',
+      title: '价格详情',
       dataIndex: 'pricing',
-      key: 'minPrice',
-      render: (pricing: PricingTier[]) => {
-        if (!pricing || pricing.length === 0) return '暂无价格';
-        const minPrice = pricing.reduce((min, tier) => 
-          tier.price < min ? tier.price : min, 
-          pricing[0]?.price || 0
-        );
-        return `¥${minPrice.toFixed(2)}`;
-      }
+      key: 'pricing',
+      render: (pricing: PricingTier[], record: Product) => <PriceDetail pricing={pricing} needRed={record.stock<=5000}/>
     },
     {
       title: '操作',
@@ -97,7 +165,7 @@ export const getProductColumns = (
               type="link"
             />
           </ResponsiveTooltip>
-          
+
           {hasEditPermission && (
             <ResponsiveTooltip title="库存管理">
               <Button 
@@ -108,7 +176,7 @@ export const getProductColumns = (
               />
             </ResponsiveTooltip>
           )}
-          
+
           {hasEditPermission && (
             <ResponsiveTooltip title="编辑">
               <Button 
@@ -119,6 +187,23 @@ export const getProductColumns = (
               />
             </ResponsiveTooltip>
           )}
+          {
+            isSuperAdmin &&  <Popconfirm
+            title="确定要删除此代产品吗？"
+            onConfirm={() => handleDelete(record._id!)}
+            okText="是"
+            cancelText="否"
+          >
+            <ResponsiveTooltip title="删除">
+              <Button 
+                icon={<DeleteOutlined />} 
+                size="small"
+                type="link"
+                danger
+              />
+            </ResponsiveTooltip>
+          </Popconfirm>
+          }
         </Space>
       )
     }
@@ -182,7 +267,7 @@ export const getInventoryRecordColumns = () => {
       width: 70,
       render: (text: string) => {
         if (!text || text === '-') return <span className="text-gray-400">-</span>;
-        
+
         return (
           <ResponsiveTooltip title={text} placement="topLeft">
             <div className="flex items-center text-gray-600 text-xs md:text-sm">
@@ -218,10 +303,10 @@ export const getInventoryRecordColumns = () => {
         const yesterday = new Date();
         yesterday.setDate(yesterday.getDate() - 1);
         const isYesterday = date.toDateString() === yesterday.toDateString();
-        
+
         // 格式化完整时间用于tooltip显示
         const fullTimeDisplay = `${date.toLocaleDateString()} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-        
+
         // 在移动端使用更紧凑的格式
         if (window.innerWidth < 768) {
           // 对于今天的记录只显示时间
@@ -250,7 +335,7 @@ export const getInventoryRecordColumns = () => {
             );
           }
         }
-        
+
         // 桌面端显示更紧凑的时间
         let displayText;
         if (isToday) {
@@ -261,7 +346,7 @@ export const getInventoryRecordColumns = () => {
           // 对于年份是当前年的日期，不显示年份
           const currentYear = new Date().getFullYear();
           const recordYear = date.getFullYear();
-          
+
           if (recordYear === currentYear) {
             const monthDay = date.toLocaleDateString().split('/').slice(1).join('/');
             displayText = `${monthDay} ${date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
@@ -269,7 +354,7 @@ export const getInventoryRecordColumns = () => {
             displayText = fullTimeDisplay;
           }
         }
-        
+
         return (
           <ResponsiveTooltip title={fullTimeDisplay}>
             <div className="text-gray-600 text-sm whitespace-nowrap overflow-hidden text-ellipsis">
@@ -290,21 +375,21 @@ export const prepareProductFormData = (values: any) => {
     // 使用固定的阶梯数量值
     const quantity = PRICING_TIERS[i].value;
     const price = values[`price_${i}`];
-    
+
     if (price !== undefined) {
       pricing.push({ quantity, price });
     }
   }
-  
+
   // 移除阶梯价格字段
   const productData = { ...values };
   for (let i = 0; i < 7; i++) {
     delete productData[`quantity_${i}`];
     delete productData[`price_${i}`];
   }
-  
+
   // 添加阶梯价格数组
   productData.pricing = pricing;
-  
+
   return productData;
 };

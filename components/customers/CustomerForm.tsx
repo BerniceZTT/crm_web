@@ -53,7 +53,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
         label="客户名称"
         rules={[{ required: true, message: '请输入客户名称' }]}
       >
-        <Input placeholder="请输入客户名称" />
+        <Input placeholder="请输入客户名称" disabled={currentCustomer? userRole != UserRole.SUPER_ADMIN : false}/>
       </Form.Item>
       
       <Form.Item
@@ -112,7 +112,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
         label="联系人"
         rules={[{ required: true, message: '请输入联系人' }]}
       >
-        <Input placeholder="请输入联系人" />
+        <Input placeholder="请输入联系人" disabled={currentCustomer? userRole != UserRole.SUPER_ADMIN : false}/>
       </Form.Item>
       
       <Form.Item
@@ -120,7 +120,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
         label="联系方式"
         rules={[{ required: true, message: '请输入联系方式' }]}
       >
-        <Input placeholder="请输入联系方式" />
+        <Input placeholder="请输入联系方式" disabled={currentCustomer? userRole != UserRole.SUPER_ADMIN : false}/>
       </Form.Item>
       
       <Form.Item
@@ -128,7 +128,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
         label="公司地址"
         rules={[{ required: true, message: '请输入公司地址' }]}
       >
-        <Input placeholder="请输入公司地址" />
+        <Input placeholder="请输入公司地址" disabled={currentCustomer? userRole != UserRole.SUPER_ADMIN : false}/>
       </Form.Item>
       
       <Form.Item

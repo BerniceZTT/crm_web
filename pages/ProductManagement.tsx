@@ -169,7 +169,7 @@ const ProductManagement: React.FC = () => {
     if (products.length > 0) {
       const stats = {
         totalProducts: products.length,
-        lowStockProducts: products.filter(p => p.stock < 50).length,
+        lowStockProducts: products.filter(p => p.stock <= 5000).length,
         totalStock: products.reduce((sum, p) => sum + p.stock, 0)
       };
       setInventoryStats(stats);
@@ -241,6 +241,17 @@ const ProductManagement: React.FC = () => {
     
     setInventoryModalVisible(true);
   };
+
+    // 删除用户
+    const handleDelete = async (id: string) => {
+      try {
+        await api.delete(`/api/products/${id}`);
+        message.success('产品删除成功');
+        mutate();
+      } catch (error) {
+        message.error(`删除失败: ${error.message || '未知错误'}`);
+      }
+    };
   
   // 保存产品
   const handleSave = async () => {
@@ -546,7 +557,25 @@ const ProductManagement: React.FC = () => {
             pricingData[`${tierName} 价格`] = tier.price;
           });
         }
-        
+        if (user?.role == UserRole.INVENTORY_MANAGER) {
+          return {
+            '产品型号': product.modelName,
+            '封装型号': product.packageType,
+            '库存数量': product.stock,
+            '创建时间': product.createdAt ? new Date(product.createdAt).toLocaleString() : '-',
+            '更新时间': product.updatedAt ? new Date(product.updatedAt).toLocaleString() : '-',
+            ...pricingData
+          };
+        }
+        if (user?.role == UserRole.FACTORY_SALES) {
+          return {
+            '产品型号': product.modelName,
+            '封装型号': product.packageType,
+            '库存数量': product.stock,
+            '创建时间': product.createdAt ? new Date(product.createdAt).toLocaleString() : '-',
+            '更新时间': product.updatedAt ? new Date(product.updatedAt).toLocaleString() : '-',
+          };
+        }
         // 合并基本数据和阶梯价格
         return {
           '产品型号': product.modelName,
@@ -558,6 +587,7 @@ const ProductManagement: React.FC = () => {
         };
       });
       
+      console.log('exportData', exportData)
       // 创建工作簿
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(exportData);
@@ -704,16 +734,18 @@ const ProductManagement: React.FC = () => {
               products={filteredProducts}
               loading={loading}
               hasEditPermission={hasEditPermission}
+              isSuperAdmin={isSuperAdmin}
               showModal={showModal}
+              handleDelete={handleDelete}
               showInventoryModal={showInventoryModal}
             />
           </Card>
         </TabPane>
         
-        <TabPane 
+        {
+          hasEditPermission && <TabPane 
           tab="库存记录" 
           key="inventory"
-          disabled={!hasEditPermission}
         >
           <Card>
             {/* 库存记录表格组件 */}
@@ -722,6 +754,7 @@ const ProductManagement: React.FC = () => {
             />
           </Card>
         </TabPane>
+        }
       </Tabs>
       
       {/* 添加/编辑产品模态框 */}

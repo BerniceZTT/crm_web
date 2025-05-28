@@ -80,9 +80,10 @@ const InventoryForm: React.FC<InventoryFormProps> = ({
       
       <Form.Item
         name="remark"
-        label="备注"
+        label="说明"
+        rules={[{ required: true, message: '请输入此次入库/出库的说明' }]}
       >
-        <Input.TextArea rows={4} placeholder="请输入备注信息" />
+        <Input.TextArea rows={4} placeholder="请输入此次入库/出库的说明" />
       </Form.Item>
     </Form>
   );

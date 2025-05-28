@@ -146,7 +146,7 @@ const MainLayout: React.FC = () => {
     if (user?.role === UserRole.INVENTORY_MANAGER) {
       return '库存管理系统';
     }
-    return '企业级CRM系统';
+    return '乾芯CRM系统';
   };
   
   return (
@@ -269,7 +269,7 @@ const MainLayout: React.FC = () => {
                   size={isMobile ? 'small' : 'default'}
                 />
                 {/* 改进用户信息显示 */}
-                <div className={`flex flex-col ${isMobile ? 'hidden' : ''}`}>
+                <div className={`flex flex-col`}>
                   <span className="font-medium text-gray-800 leading-tight">
                     {user?.username || user?.companyName || 'User'}
                   </span>

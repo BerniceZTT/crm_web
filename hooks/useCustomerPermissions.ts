@@ -51,7 +51,7 @@ export const useCustomerPermissions = () => {
       // 代理商不能移入公海
       if (user.role === UserRole.AGENT) return false;
       // 销售只能移入关联到自己的客户
-      if (user.role === UserRole.FACTORY_SALES && customer.relatedSalesId === user._id) return true;
+      // if (user.role === UserRole.FACTORY_SALES && customer.relatedSalesId === user._id) return true;
       return false;
     },
 

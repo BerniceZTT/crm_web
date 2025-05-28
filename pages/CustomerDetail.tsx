@@ -111,7 +111,7 @@ const CustomerDetail: React.FC = () => {
     data: historyData,
     isLoading: historyLoading,
     error: historyError
-  } = useData<{ history: CustomerAssignmentHistory[] }>(id ? `/api/customer-progress/${id}` : null);
+  } = useData<{ history: CustomerAssignmentHistory[] }>(id ? `/api/customer-assignments/${id}` : null);
 
   console.log('historyData',historyData)
   const assignmentHistory = historyData?.history || [];
@@ -128,7 +128,7 @@ const CustomerDetail: React.FC = () => {
     return assignmentHistory.filter(history => 
       history.operationType === 'publicPool' || 
       history.operationType === 'assign' ||
-      history.operationType === '认领'
+      history.operationType === '跟进'
     );
   }, [assignmentHistory]);
   
@@ -217,10 +217,10 @@ const CustomerDetail: React.FC = () => {
   const getOperationColor = (operationType: string) => {
     const colorMap: Record<string, string> = {
       '分配': 'green',
-      '认领': 'blue',
+      '跟进': 'blue',
       '移入公海池': 'red',
       '新建分配': 'orange',
-      '新建认领': 'purple',
+      '新建跟进': 'purple',
       'publicPool': 'red',
       'assign': 'green',
       'cancel': 'orange'
@@ -229,7 +229,7 @@ const CustomerDetail: React.FC = () => {
   };
 
   const formatOperationType = (history: CustomerAssignmentHistory) => {
-    if (['分配', '认领', '移入公海池', '新建分配', '新建认领'].includes(history.operationType)) {
+    if (['分配', '跟进', '移入公海池', '新建分配', '新建跟进'].includes(history.operationType)) {
       return history.operationType;
     }
     
@@ -237,36 +237,36 @@ const CustomerDetail: React.FC = () => {
       return '移入公海池';
     } else if (history.operationType === 'assign') {
       if (!history.fromRelatedSalesId || history.fromRelatedSalesId === null) {
-        return '认领';
+        return '跟进';
       } else {
         return '分配';
       }
     } else if (history.operationType === 'cancel') {
       return '取消分配';
     }
-    return '未知操作';
+    return history.operationType??'未知操作';
   };
 
   const formatOperationContent = (history: CustomerAssignmentHistory) => {
-    if (['分配', '认领', '移入公海池', '新建分配', '新建认领'].includes(history.operationType)) {
+    if (['分配', '跟进', '移入公海池', '新建分配', '新建跟进'].includes(history.operationType)) {
       if (history.operationType === '移入公海池') {
         const fromName = history.fromRelatedSalesName;
         if(history.fromRelatedAgentName){
           return `客户从「${fromName}(销售)」「${history.fromRelatedAgentName}(代理商)」移入公海`;
         }
         return `客户从「${fromName}(销售)」移入公海`;
-      } else if (history.operationType === '认领') {
+      } else if (history.operationType === '跟进') {
         const toName = history.toRelatedSalesName;
         if(history.toRelatedAgentName){
-          return`从公海认领到「${toName}(销售)」「${history.toRelatedAgentName}(代理商)」`;
+          return`从公海跟进到「${toName}(销售)」「${history.toRelatedAgentName}(代理商)」`;
         }
-        return `从公海认领到「${toName}(销售)」`;
-      } else if (history.operationType === '新建认领') {
+        return `从公海跟进到「${toName}(销售)」`;
+      } else if (history.operationType === '新建跟进') {
         const toName = history.toRelatedSalesName;
         if(history.toRelatedAgentName){
-          return `新建客户并认领给「${toName}(销售)」「${history.toRelatedAgentName}(代理商)」`;
+          return `新建客户并跟进给「${toName}(销售)」「${history.toRelatedAgentName}(代理商)」`;
         }
-        return `新建客户并认领给「${toName}(销售)」`;
+        return `新建客户并跟进给「${toName}(销售)」`;
       } else if (history.operationType === '新建分配') {
         const toName = history.toRelatedSalesName;
         if (history.toRelatedAgentName) {
@@ -291,7 +291,7 @@ const CustomerDetail: React.FC = () => {
       }
     }
   
-    return '操作详情未知';
+    return history.operationType??'操作详情未知';
   };
   
   // 添加日期格式化工具函数
@@ -608,14 +608,14 @@ const CustomerDetail: React.FC = () => {
                 </p>
               </Timeline.Item>
               
-              {publicPoolHistory.length > 0 && (publicPoolHistory[0].operationType === 'assign' || publicPoolHistory[0].operationType === '认领') && (
+              {publicPoolHistory.length > 0 && (publicPoolHistory[0].operationType === 'assign' || publicPoolHistory[0].operationType === '跟进') && (
                 <Timeline.Item color="blue">
-                  <p>最近认领</p>
+                  <p>最近跟进</p>
                   <p className="text-gray-500 text-sm">
                     {publicPoolHistory[0].createdAt ? formatDateTime(publicPoolHistory[0].createdAt) : '-'}
                   </p>
                   <p className="text-gray-500 text-sm">
-                    由 {publicPoolHistory[0].operatorName} 认领
+                    由 {publicPoolHistory[0].operatorName} 跟进
                   </p>
                 </Timeline.Item>
               )}

@@ -57,9 +57,9 @@ export enum CustomerNature {
 
 // 客户重要程度枚举
 export enum CustomerImportance {
-  A = 'A类客户', // 6个月内能产生销售
-  B = 'B类客户', // 1年内能产生销售
-  C = 'C类客户'  // 1年以上能产生销售
+  A = 'A类客户（近三个月能生产）', // 6个月内能产生销售
+  B = 'B类客户（近半年能生产）', // 1年内能产生销售
+  C = 'C类客户（近一年能生产）'  // 1年以上能产生销售
 }
 
 // 客户进展枚举
@@ -214,9 +214,11 @@ export interface CustomerAssignmentHistory {
   
   operatorId: string;
   operatorName: string;
-  operationType: '移入公海池' | '认领' | '分配' | '新建认领' | '新建分配'; // 更新了可能的操作类型
+  operationType: '移入公海池' | '跟进' | '分配' | '新建跟进' | '新建分配'; // 更新了可能的操作类型
   createdAt?: Date;
   updatedAt?: Date;
+
+  remark?: string;
 }
 
 // 公海客户响应类型

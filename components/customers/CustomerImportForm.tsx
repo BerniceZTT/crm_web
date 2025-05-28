@@ -9,11 +9,6 @@ import {
   InboxOutlined 
 } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
-import { 
-  CustomerNature, 
-  CustomerImportance, 
-  CustomerProgress 
-} from '../../shared/types';
 import { parseCustomerFile } from '../../utils/fileUtils';
 import { api } from '../../utils/api';
 
@@ -85,7 +80,7 @@ const CustomerImportForm = forwardRef<CustomerImportFormRef, CustomerImportFormP
     const exampleRow = [
       '示例客户名称',
       '请选择: 民营上市公司 / 民营中小企业 / 科研院所 / 国央企',
-      '请选择: A类客户 / B类客户 / C类客户',
+      '请选择: A类客户（近三个月能生产） / B类客户（近半年能生产） / C类客户（近一年能生产）',
       '高精度仪器',
       '产品A,产品B',
       '张三',
@@ -297,6 +292,7 @@ const CustomerImportForm = forwardRef<CustomerImportFormRef, CustomerImportFormP
           <p className="text-green-600">成功导入 <span className="font-bold">{importResult.successCount}</span> 个客户</p>
         </div>
       );
+      
     }
     
     return (

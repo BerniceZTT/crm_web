@@ -92,7 +92,7 @@ const Register: React.FC = () => {
         className="hover:shadow-xl"
       >
         <div className="text-center mb-8">
-          <Title level={2} className="text-indigo-600 mb-2">企业级CRM系统</Title>
+          <Title level={2} className="text-indigo-600 mb-2">乾芯CRM系统</Title>
           <Title level={4} className="font-normal text-gray-500 mt-0">账号注册</Title>
         </div>
         
@@ -152,7 +152,7 @@ const Register: React.FC = () => {
             <Form.Item
               name="username"
               label="用户名"
-              rules={[{ required: true, message: '请输入用户名' }]}
+              rules={[{ required: true, message: '请输入用户名/代理商名' }]}
             >
               <Input prefix={<UserOutlined className="text-gray-400" />} />
             </Form.Item>

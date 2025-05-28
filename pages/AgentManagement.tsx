@@ -289,10 +289,10 @@ const AgentManagement: React.FC = () => {
         
         // 对于原厂销售角色：已批准的代理商不显示任何操作按钮，非已批准的显示编辑和删除
         if (isFactorySales) {
-          // 已批准的代理商，不显示任何按钮
-          if (record.status === UserStatus.APPROVED) {
-            return null;
-          }
+          // // 已批准的代理商，不显示任何按钮
+          // if (record.status === UserStatus.APPROVED) {
+          //   return null;
+          // }
           
           // 待审批或已拒绝的代理商，显示编辑和删除按钮
           return (

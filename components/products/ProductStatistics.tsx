@@ -3,8 +3,7 @@
  * 展示产品库存相关统计信息
  */
 import React from 'react';
-import { Row, Col, Card, Statistic } from 'antd';
-import { InfoCircleOutlined, ArrowDownOutlined, ArrowUpOutlined } from '@ant-design/icons';
+import { Row, Col, Card, Statistic, Tooltip } from 'antd';
 
 interface ProductStatisticsProps {
   totalProducts: number;
@@ -25,17 +24,19 @@ const ProductStatistics: React.FC<ProductStatisticsProps> = ({
             <Statistic
               title="总产品数量"
               value={totalProducts}
-              prefix={<InfoCircleOutlined />}
             />
           </Card>
         </Col>
         <Col span={8}>
           <Card>
             <Statistic
-              title="低库存产品"
+              title={
+                <Tooltip title="库存小于等于5000的产品被定义为低库存产品">
+                  <span style={{ cursor: 'pointer' }}>低库存产品</span>
+                </Tooltip>
+              }
               value={lowStockProducts}
               valueStyle={{ color: '#cf1322' }}
-              prefix={<ArrowDownOutlined />}
               suffix={`/ ${totalProducts}`}
             />
           </Card>
@@ -46,7 +47,6 @@ const ProductStatistics: React.FC<ProductStatisticsProps> = ({
               title="总库存量"
               value={totalStock}
               valueStyle={{ color: '#3f8600' }}
-              prefix={<ArrowUpOutlined />}
             />
           </Card>
         </Col>

@@ -97,7 +97,7 @@ export const PriceDetail: React.FC<{
 
             return (
               <div key={index} className="flex justify-between text-xs py-1">
-                <span>¥{displayText}:</span>
+                <span>{displayText}:</span>
                 <span className="font-medium">¥{tier.price.toFixed(2)}</span>
               </div>
             );
@@ -260,7 +260,7 @@ export const getInventoryRecordColumns = () => {
       }
     },
     {
-      title: '备注',
+      title: '说明',
       dataIndex: 'remark',
       key: 'remark',
       responsive: ['xs', 'sm', 'md', 'lg'],

@@ -61,10 +61,7 @@ export async function fetchApi(
   // 合并默认选项
   const mergedOptions = { ...DEFAULT_API_OPTIONS, ...options };
   let showErrorMessaged = false
-  try {
-    const requestStartTime = Date.now();
-    console.log(`[API请求开始] ${method} ${endpoint}`);
-    
+  try {    
     // 构建请求头
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -72,7 +69,6 @@ export async function fetchApi(
     
     // 获取并添加认证token
     const token = getAuthToken();
-    console.log(`[API请求开始] token: ${token}`);
     if ((endpoint.includes('dashboard-stats')) && token == null) {
       return
     }
@@ -80,25 +76,13 @@ export async function fetchApi(
       // 验证token格式 - 优化token验证逻辑，避免过度严格的验证
       if (typeof token === 'string' && token.length > 0) {
         headers['Authorization'] = `Bearer ${token}`;
-        console.log(`[API] 添加认证头: Bearer ${token.substring(0, 10)}...`);
-      } else {
-        console.warn(`[API] 存储的token格式无效:`, token);
-        // 清除无效token
-        // localStorage.removeItem('token');
-        
+      } else {        
         if (!endpoint.includes('/api/auth/login') && !mergedOptions.ignoreAuthError) {
           redirectToLogin('登录状态无效，请重新登录');
           throw new Error('无效的token格式');
         }
       }
     } else {
-      console.log(`[API] 请求无token，检查是否需要重新登录`);
-      
-      // 对于需要认证的非登录接口，直接重定向到登录页 
-      // if (!endpoint.includes('/api/auth') && !mergedOptions.ignoreAuthError) {
-      //   redirectToLogin('请先登录');
-      //   throw new Error('缺少认证令牌');
-      // }
     }
     headers['Authorization'] = `Bearer ${token}`;
     // 构建请求配置
@@ -121,18 +105,7 @@ export async function fetchApi(
     
     // 执行请求
     console.log(`[API] 发送请求: ${method} ${url}`, data ? `数据: ${JSON.stringify(data)}` : '');
-    
-    // 保存完整请求信息用于调试
-    const requestInfo = {
-      url,
-      method,
-      headers: { ...headers },
-      body: data ? JSON.stringify(data) : undefined
-    };
-    console.log('[API] 完整请求信息:', requestInfo);
     const response = await fetch(url, config);
-    const requestDuration = Date.now() - requestStartTime;
-    console.log(`[API] 请求完成 (${requestDuration}ms): ${method} ${endpoint}, 状态: ${response.status}`);
     
     // 处理未授权错误 (401)
     if (response.status === 401 && !mergedOptions.ignoreAuthError) {
@@ -174,7 +147,6 @@ export async function fetchApi(
     let responseText;
     try {
       responseText = await response.clone().text();
-      console.log(`[API] 原始响应文本: ${responseText.substring(0, 1000)}${responseText.length > 1000 ? '...' : ''}`);
     } catch(e) {
       console.warn('[API] 无法读取原始响应文本:', e);
     }
@@ -185,7 +157,6 @@ export async function fetchApi(
     if (contentType && contentType.includes('application/json')) {
       try {
         responseBody = await response.json();
-        console.log(`[API] JSON响应:`, responseBody);
       } catch(e) {
         // JSON解析失败，使用文本作为备用
         console.error('[API] JSON解析失败:', e);

@@ -228,7 +228,6 @@ export function useData<T>(url: string | null, options?: {
       setShouldRetry(true);
       
       // 额外检查数据是否确实发生了变化
-      console.log(`[Cache] 数据获取完成: ${url}`);
     } catch (err) {
       console.error(`获取数据失败: ${url}`, err);
       setError(err instanceof Error ? err : new Error(String(err)));

@@ -113,7 +113,6 @@ const CustomerDetail: React.FC = () => {
     error: historyError
   } = useData<{ history: CustomerAssignmentHistory[] }>(id ? `/api/customer-assignments/${id}` : null);
 
-  console.log('historyData',historyData)
   const assignmentHistory = historyData?.history || [];
   
   const {

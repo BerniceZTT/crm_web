@@ -70,7 +70,7 @@ const fetcher = async (url: string) => {
 
 const ProductManagement: React.FC = () => {
   const { user } = useAuth();
-  const { isMobile, screenWidth } = useResponsive();
+  const { isMobile } = useResponsive();
   const isInventoryManager = user?.role === UserRole.INVENTORY_MANAGER;
   const isSuperAdmin = user?.role === UserRole.SUPER_ADMIN;
   const isFactorySales = user?.role === UserRole.FACTORY_SALES;
@@ -162,7 +162,9 @@ const ProductManagement: React.FC = () => {
   
   // 只有当recordsUrl不为null时才发起请求
   const { data: recordsData, mutate: mutateRecords } = useSWR(recordsUrl, recordsUrl ? fetcher : null);
-  const inventoryRecords = recordsData?.records || [];
+  console.log('recordsData',recordsData)
+  const inventoryRecords = recordsData || [];
+  
   
   // 计算库存统计信息
   useEffect(() => {
@@ -480,66 +482,7 @@ const ProductManagement: React.FC = () => {
       setImportLoading(false);
     }
   };
-  
-  // 导出产品数据为CSV - 前端直接导出当前表格
-  const exportProductsToCSV = () => {
-    try {
-      // 准备表格数据
-      const exportData = filteredProducts.map(product => {
-        // 提取阶梯价格
-        const pricingData = {};
-        if (product.pricing && Array.isArray(product.pricing)) {
-          product.pricing.forEach((tier, index) => {
-            // 使用从productUtils导入的PRICING_TIERS
-            const tierInfo = {
-              min: 1, max: 1000, display: '1-1k', value: 1,
-              ...{
-                [0]: { min: 1, max: 1000, display: '1-1k', value: 1 },
-                [1]: { min: 1000, max: 10000, display: '1k-10k', value: 1000 },
-                [2]: { min: 10000, max: 50000, display: '10k-50k', value: 10000 },
-                [3]: { min: 50000, max: 100000, display: '50k-100k', value: 50000 },
-                [4]: { min: 100000, max: 500000, display: '500k-1M', value: 100000 },
-                [5]: { min: 500000, max: 1000000, display: '1M-5M', value: 500000 },
-                [6]: { min: 1000000, max: null, display: '大于5M', value: 1000000 },
-              }[index]
-            };
-            const tierName = tierInfo?.display || `阶梯${index+1}`;
-            pricingData[`${tierName} 价格`] = tier.price;
-          });
-        }
-        
-        // 合并基本数据和阶梯价格
-        return {
-          '产品型号': product.modelName,
-          '封装型号': product.packageType,
-          '库存数量': product.stock,
-          '创建时间': product.createdAt ? new Date(product.createdAt).toLocaleString() : '-',
-          '更新时间': product.updatedAt ? new Date(product.updatedAt).toLocaleString() : '-',
-          ...pricingData
-        };
-      });
-      
-      // 创建工作簿
-      const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(exportData);
-      
-      // 添加到工作簿
-      XLSX.utils.book_append_sheet(wb, ws, '产品数据');
-      
-      // 生成包含时间戳的文件名
-      const now = new Date();
-      const formattedDate = `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日${now.getHours()}点${now.getMinutes()}分`;
-      const fileName = `产品_${formattedDate}.csv`;
-      
-      // 生成并下载文件
-      XLSX.writeFile(wb, fileName);
-      message.success('产品数据已成功导出为CSV文件');
-    } catch (error) {
-      console.error('导出失败:', error);
-      message.error('导出失败，请重试');
-    }
-  };
-  
+    
   // 导出产品数据为XLSX - 修改为导出xlsx格式
   const exportProductsToXLSX = () => {
     try {
@@ -557,7 +500,7 @@ const ProductManagement: React.FC = () => {
             pricingData[`${tierName} 价格`] = tier.price;
           });
         }
-        if (user?.role == UserRole.INVENTORY_MANAGER) {
+        if (user?.role == UserRole.FACTORY_SALES) {
           return {
             '产品型号': product.modelName,
             '封装型号': product.packageType,
@@ -567,7 +510,7 @@ const ProductManagement: React.FC = () => {
             ...pricingData
           };
         }
-        if (user?.role == UserRole.FACTORY_SALES) {
+        if (user?.role == UserRole.INVENTORY_MANAGER) {
           return {
             '产品型号': product.modelName,
             '封装型号': product.packageType,

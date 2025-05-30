@@ -41,6 +41,9 @@ const MainLayout: React.FC = () => {
   const { user, logout, hasPermission } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+
+  console.log('MainLayout user', user)
+
   
   // 监听窗口大小变化，使用防抖处理避免频繁触发
   useEffect(() => {

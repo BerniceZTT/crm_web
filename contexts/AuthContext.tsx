@@ -62,7 +62,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (isValidating || authInitialized) return;
       
       setIsValidating(true);
-      console.log('====== 初始化认证状态 ======');
       
       try {
         if (!validateStoredToken()) {
@@ -91,7 +90,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         
         if (response && response.user) {
           const validatedUser = response.user;
-          
+          if(validatedUser.username == null && validatedUser.name){
+            validatedUser.username= validatedUser.name
+            validatedUser._id = validatedUser.id
+          }
+          if(validatedUser._id == null && validatedUser.id){
+            validatedUser._id = validatedUser.id
+          }
           console.log(`Token验证成功! 用户: ${validatedUser.username || validatedUser.companyName}, 角色: ${validatedUser.role}`);
           setUser(validatedUser);
           setAuthError(null);
@@ -134,9 +139,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           ignoreAuthError: true
         }
       );
-      
-      console.log('登录响应详情:', response);
-      
+        
       let tokenValue: string | null = null;
       let userData: User | null = null;
       

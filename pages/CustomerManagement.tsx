@@ -4,17 +4,17 @@
  * 增强了移动端适配
  */
 import React, { useState, useRef } from 'react';
-import {
-  Space,
-  Button,
-  Modal,
+import { 
+  Space, 
+  Button, 
+  Modal, 
   message,
   Form
 } from 'antd';
-import {
-  PlusOutlined,
-  SearchOutlined,
-  UploadOutlined
+import { 
+  PlusOutlined, 
+  UploadOutlined,
+  SearchOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,14 +28,14 @@ import CustomerTable from '../components/customers/CustomerTable';
 import CustomerForm from '../components/customers/CustomerForm';
 import CustomerAssignForm from '../components/customers/CustomerAssignForm';
 import CustomerImportForm, { CustomerImportFormRef } from '../components/customers/CustomerImportForm';
-import CustomerDuplicateCheck from 'components/customers/CustomerDuplicateCheck';
+import CustomerNameValidator from '../components/customers/CustomerNameValidator';
 
 const CustomerManagement: React.FC = () => {
   const { hasPermission } = useAuth();
   const navigate = useNavigate();
   const { isMobile } = useResponsive();
   const [importBtnLoading, setImportBtnLoading] = useState(false);
-  const [duplicateCheckModalVisible, setDuplicateCheckModalVisible] = useState(false);
+  const [nameValidatorVisible, setNameValidatorVisible] = useState(false);
   const importFormRef = useRef<CustomerImportFormRef>(null);
 
   // 使用自定义钩子管理业务逻辑和状态
@@ -82,31 +82,34 @@ const CustomerManagement: React.FC = () => {
     handleSalesChange,
     refreshCustomers
   } = useCustomerManagement();
-// 显示查重弹窗
-const showDuplicateCheckModal = () => {
-  setDuplicateCheckModalVisible(true);
-};
 
-// 关闭查重弹窗
-const handleDuplicateCheckCancel = () => {
-  setDuplicateCheckModalVisible(false);
-};
+  // 显示客户名称校验器（查重功能）
+  const showNameValidator = () => {
+    setNameValidatorVisible(true);
+  };
 
-// 从查重结果创建新客户
-const handleCreateFromDuplicateCheck = (initialData?: any) => {
-  setDuplicateCheckModalVisible(false);
+  // 关闭客户名称校验器
+  const handleNameValidatorCancel = () => {
+    setNameValidatorVisible(false);
+  };
 
-  // 如果有初始数据，设置到表单中
-  if (initialData) {
-    // 等待Modal关闭后再设置表单值
+  // 从客户名称校验器确认后创建新客户
+  const handleNameValidatorConfirm = (validatedName: string) => {
+    setNameValidatorVisible(false);
+
+    // 准备初始数据，将校验通过的名称设置到表单中
+    const initialData = {
+      name: validatedName
+    };
+
+    // 等待Modal关闭后再设置表单值并显示新建客户弹窗
     setTimeout(() => {
       form.setFieldsValue(initialData);
       showModal();
     }, 100);
-  } else {
-    showModal();
-  }
-};
+
+    message.success('客户名称校验通过，请继续填写其他信息');
+  };
 
   // 增强版的导入处理函数，增加加载状态控制
   const handleImportWithLoading = async () => {
@@ -184,12 +187,12 @@ const handleCreateFromDuplicateCheck = (initialData?: any) => {
         }, 100, 'error');
       }
     } catch (error: any) {
-      console.error('客户导入失败1:', error);
+      console.error('客户导入失败:', error);
 
       // 显示错误信息
       importFormRef.current?.setImportResultStatus({
         success: false,
-        message: '导入失败: ' + (error.error || '未知错误'),
+        message: '导入失败: ' + (error.error || error.message || '未知错误'),
         errors: error.errors || []
       }, 100, 'error');
     } finally {
@@ -210,27 +213,27 @@ const handleCreateFromDuplicateCheck = (initialData?: any) => {
 
         {/* 操作按钮 - 更加紧凑的布局 */}
         <Space wrap size="small">
-          <Button
-            icon={<SearchOutlined />}
-            onClick={showDuplicateCheckModal}
-            className="border-blue-500 text-blue-500 hover:bg-blue-50"
-          >
-            查重
-          </Button>
+              <Button 
+                icon={<SearchOutlined />} 
+                onClick={showNameValidator}
+                className="border-blue-500 text-blue-500 hover:bg-blue-50"
+              >
+                查重
+              </Button>
 
           {hasPermission('customers', 'create') && (
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => showModal()}
-            >
-              新增客户
-            </Button>
+              <Button 
+                type="primary" 
+                icon={<PlusOutlined />} 
+                onClick={() => showModal()}
+              >
+                新增客户
+              </Button>
           )}
 
           {!isMobile && hasPermission('customers', 'create') && (
-            <Button
-              icon={<UploadOutlined />}
+            <Button 
+              icon={<UploadOutlined />} 
               onClick={showImportModal}
             >
               批量导入
@@ -240,8 +243,8 @@ const handleCreateFromDuplicateCheck = (initialData?: any) => {
       </div>
 
       {/* 筛选条件卡片 - 使用受控组件模式传递filters和keyword */}
-      <CustomerFilters
-        onFilterChange={handleFilterChange}
+      <CustomerFilters 
+        onFilterChange={handleFilterChange} 
         onSearch={handleSearch}
         keyword={keyword}
         filters={filters}
@@ -249,7 +252,7 @@ const handleCreateFromDuplicateCheck = (initialData?: any) => {
       />
 
       {/* 客户表格 */}
-      <CustomerTable
+      <CustomerTable 
         customers={customers}
         pagination={pagination}
         isLoading={isLoading}
@@ -263,23 +266,26 @@ const handleCreateFromDuplicateCheck = (initialData?: any) => {
       />
 
         {/* 客户查重模态框 */}
-        <Modal
+      <Modal
         title={
           <div className="flex items-center">
             <SearchOutlined className="mr-2 text-blue-500" />
             客户查重检查
           </div>
         }
-        open={duplicateCheckModalVisible}
-        onCancel={handleDuplicateCheckCancel}
+        open={nameValidatorVisible}
+        onCancel={handleNameValidatorCancel}
         footer={null}
-        width={700}
+        width={800}
         maskClosable={false}
         destroyOnClose
       >
-        <CustomerDuplicateCheck 
-          onCreateNew={handleCreateFromDuplicateCheck}
-          onCancel={handleDuplicateCheckCancel}
+        <CustomerNameValidator 
+          visible={nameValidatorVisible}
+          initialName=""
+          onCancel={handleNameValidatorCancel}
+          onConfirm={handleNameValidatorConfirm}
+          readOnly={true}
         />
       </Modal>
 
@@ -293,7 +299,7 @@ const handleCreateFromDuplicateCheck = (initialData?: any) => {
         maskClosable={false}
         destroyOnClose
       >
-        <CustomerForm
+        <CustomerForm 
           form={form}
           currentCustomer={currentCustomer}
           products={products}
@@ -315,7 +321,7 @@ const handleCreateFromDuplicateCheck = (initialData?: any) => {
         maskClosable={false}
         destroyOnClose
       >
-        <CustomerAssignForm
+        <CustomerAssignForm 
           form={assignForm}
           currentCustomer={currentCustomer}
           salesUsers={salesUsers}
@@ -332,7 +338,7 @@ const handleCreateFromDuplicateCheck = (initialData?: any) => {
         onOk={handleImportWithLoading}
         onCancel={handleCloseImportModal}
         okText="导入"
-        okButtonProps={{
+        okButtonProps={{ 
           icon: <UploadOutlined />,
           loading: importBtnLoading
         }}
@@ -340,8 +346,8 @@ const handleCreateFromDuplicateCheck = (initialData?: any) => {
         maskClosable={false}
         destroyOnClose
       >
-        <CustomerImportForm
-          form={importForm}
+        <CustomerImportForm 
+          form={importForm} 
           ref={importFormRef}
         />
       </Modal>

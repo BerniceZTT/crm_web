@@ -364,3 +364,14 @@ function getAuthToken() {
   console.warn('未找到任何形式的 token');
   return null;
 }
+
+// 检查重复客户名称
+export const checkDuplicateCustomers = async (customerNames: string[]) => {
+  return api.post('/api/customers/check-duplicates', { customerNames });
+};
+
+// 公司名称补充接口
+export const getCompanyNameSuggestions = async (prefix: string) => {
+  return api.get(`/api/customers/complete-company-names?prefix=${encodeURIComponent(prefix)}`);
+}
+

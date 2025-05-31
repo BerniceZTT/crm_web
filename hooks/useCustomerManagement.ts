@@ -178,7 +178,6 @@ export const useCustomerManagement = () => {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-      
       // 确保 annualDemand 是数字类型
       if (values.annualDemand) {
         values.annualDemand = Number(values.annualDemand);

@@ -86,9 +86,6 @@ const CustomerFilters: React.FC<CustomerFiltersProps> = ({
           case 'importance':
             label = '重要程度';
             break;
-          case 'progress':
-            label = '客户进展';
-            break;
           case 'isInPublicPool':
             label = '客户池';
             displayValue = value === true ? '公海客户' : '私海客户';
@@ -213,28 +210,6 @@ const CustomerFilters: React.FC<CustomerFiltersProps> = ({
                   ))}
                 </Select>
               </Col>
-              
-              {/* 客户进度筛选 - 公海池中不显示，因为公海池客户的进度都是固定的 */}
-              {!isPublicPool && (
-                <Col xs={24} sm={12} md={8} lg={6}>
-                  <div className="mb-1 text-gray-600 text-sm">客户进度</div>
-                  <Select
-                    placeholder="选择客户进度"
-                    style={{ width: '100%' }}
-                    allowClear
-                    size={getControlSize()}
-                    value={filters.progress}
-                    onChange={(value) => onFilterChange('progress', value)}
-                  >
-                    {Object.entries(CustomerProgress).map(([key, value]) => (
-                      <Option key={key} value={value}>
-                        {value}
-                      </Option>
-                    ))}
-                  </Select>
-                </Col>
-              )}
-
             </Row>
           </Panel>
         </Collapse>

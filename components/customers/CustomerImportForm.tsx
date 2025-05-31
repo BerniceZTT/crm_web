@@ -70,7 +70,6 @@ const CustomerImportForm = forwardRef<CustomerImportFormRef, CustomerImportFormP
       '联系人',
       '联系方式',
       '公司地址',
-      '客户进展',
       '年需求量(片)',
       '关联销售名称',
       '关联代理商名称'
@@ -86,7 +85,6 @@ const CustomerImportForm = forwardRef<CustomerImportFormRef, CustomerImportFormP
       '张三',
       '13800138000',
       '北京市海淀区XX路XX号',
-      '请选择: 样板评估 / 打样测试 / 小批量导入 / 批量出货',
       '10000',
       '销售1',
       '代理商1'
@@ -108,7 +106,6 @@ const CustomerImportForm = forwardRef<CustomerImportFormRef, CustomerImportFormP
       { wch: 10 }, // 联系人
       { wch: 15 }, // 联系方式
       { wch: 30 }, // 公司地址
-      { wch: 15 }, // 客户进展
       { wch: 15 }, // 年需求量
       { wch: 15 }, // 关联销售
       { wch: 15 }  // 关联代理商

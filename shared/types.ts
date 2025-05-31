@@ -21,6 +21,7 @@ export enum UserStatus {
 // 用户类型
 export interface User {
   _id?: string;
+  companyName?: string;
   username: string;
   password?: string;
   phone: string;
@@ -64,10 +65,7 @@ export enum CustomerImportance {
 
 // 客户进展枚举
 export enum CustomerProgress {
-  SAMPLE_EVALUATION = '样板评估',
-  TESTING = '打样测试',
-  SMALL_BATCH = '小批量导入',
-  MASS_PRODUCTION = '批量出货',
+  NORMAL = '正常',
   PUBLIC_POOL = '进入公海'
 }
 
@@ -301,4 +299,86 @@ export interface ProductProgressDistribution {
   testing: number;
   smallBatch: number;
   massProduction: number;
+}
+
+// 项目进展枚举 - 恢复完整的项目阶段状态
+export enum ProjectProgress {
+  SAMPLE_EVALUATION = '样板评估',
+  TESTING = '打样测试', 
+  SMALL_BATCH = '小批量导入',
+  MASS_PRODUCTION = '批量出货',
+  ABANDONED = '废弃'
+}
+
+// 项目类型 - 更新为支持多文件
+export interface Project {
+  _id?: string;
+  projectName: string;
+  customerId: string;
+  customerName: string;
+  creatorId: string;
+  creatorName: string;
+  updaterId?: string;
+  updaterName?: string;
+  productId: string;
+  productName: string;
+  batchNumber: string;
+  projectProgress: ProjectProgress;
+  
+  // 小批量相关字段 - 改为数组支持多文件
+  smallBatchPrice?: number;
+  smallBatchQuantity?: number;
+  smallBatchTotal?: number; // 自动计算，单位万元
+  smallBatchAttachments?: FileAttachment[]; // 改为数组
+  
+  // 批量出货相关字段 - 改为数组支持多文件
+  massProductionPrice?: number;
+  massProductionQuantity?: number;
+  massProductionTotal?: number; // 自动计算，单位万元
+  paymentTerm?: string;
+  massProductionAttachments?: FileAttachment[]; // 改为数组
+  
+  remark?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+
+// 文件附件类型
+export interface FileAttachment {
+  id: string;
+  fileName: string;
+  originalName: string;
+  fileSize: number;
+  fileType: string;
+  uploadTime: Date;
+  uploadedBy: string;
+  url: string;
+}
+
+// 项目跟进记录类型 - 新增
+export interface ProjectFollowUpRecord {
+  _id?: string;
+  projectId: string;
+  title: string;
+  content: string;
+  creatorId: string;
+  creatorName: string;
+  creatorType: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// 项目进展历史记录类型 - 新增
+export interface ProjectProgressHistory {
+  _id?: string;
+  projectId: string;
+  projectName: string;
+  fromProgress: string;
+  toProgress: string;
+  operatorId: string;
+  operatorName: string;
+  remark?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

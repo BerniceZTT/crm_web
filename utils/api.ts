@@ -375,3 +375,30 @@ export const getCompanyNameSuggestions = async (prefix: string) => {
   return api.get(`/api/customers/complete-company-names?prefix=${encodeURIComponent(prefix)}`);
 }
 
+// 项目相关API函数
+export const projectApi = {
+  // 获取客户的项目列表
+  getCustomerProjects: async (customerId: string) => {
+    return api.get(`/api/projects/customer/${customerId}`);
+  },
+  
+  // 获取项目详情
+  getProject: async (projectId: string) => {
+    return api.get(`/api/projects/${projectId}`);
+  },
+  
+  // 创建项目
+  createProject: async (projectData: any) => {
+    return api.post('/api/projects', projectData, { showSuccessMessage: true });
+  },
+  
+  // 更新项目
+  updateProject: async (projectId: string, projectData: any) => {
+    return api.put(`/api/projects/${projectId}`, projectData, { showSuccessMessage: true });
+  },
+  
+  // 删除项目
+  deleteProject: async (projectId: string) => {
+    return api.delete(`/api/projects/${projectId}`, { showSuccessMessage: true });
+  }
+};

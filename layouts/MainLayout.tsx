@@ -41,9 +41,6 @@ const MainLayout: React.FC = () => {
   const { user, logout, hasPermission } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-
-  console.log('MainLayout user', user)
-
   
   // 监听窗口大小变化，使用防抖处理避免频繁触发
   useEffect(() => {
@@ -83,7 +80,7 @@ const MainLayout: React.FC = () => {
     navigate('/login');
   };
   
-  // 菜单项配置 - 修改用户管理菜单的访问控制
+  // 菜单项配置
   const menuItems = [
     {
       key: '/',
@@ -113,7 +110,6 @@ const MainLayout: React.FC = () => {
       key: '/users',
       icon: <UserOutlined />,
       label: <Link to="/users">用户管理</Link>,
-      // 修改访问控制，仅超级管理员可见
       access: user?.role === UserRole.SUPER_ADMIN
     },
     {
@@ -125,9 +121,18 @@ const MainLayout: React.FC = () => {
   ].filter(item => item.access);
   
   // 根据当前路径找到选中的菜单项
-  const selectedKey = menuItems.find(item => 
-    location.pathname === item.key || location.pathname.startsWith(`${item.key}/`)
-  )?.key || '/';
+  const selectedKey = (() => {
+    if (location.pathname.startsWith('/projects')) {
+      return '/customers';
+    }
+    
+    const matchedItem = menuItems.find(item => 
+      location.pathname === item.key || 
+      (item.key !== '/' && location.pathname.startsWith(`${item.key}/`))
+    );
+    
+    return matchedItem?.key || '/';
+  })();
   
   // 渲染菜单内容
   const renderMenu = () => (
@@ -203,8 +208,8 @@ const MainLayout: React.FC = () => {
             padding: 0,
             background: 'linear-gradient(180deg, #f8fafc 0%, #ffffff 100%)',
           }}
-          maskClosable={true} // 允许点击遮罩关闭抽屉
-          style={{ zIndex: 1001 }} // 确保抽屉在其他元素之上
+          maskClosable={true}
+          style={{ zIndex: 1001 }}
         >
           <div className="p-5 flex items-center justify-center">
             <Title level={4} className="m-0">
@@ -221,7 +226,7 @@ const MainLayout: React.FC = () => {
       <Layout style={{ 
         marginLeft: isMobile ? 0 : (collapsed ? 80 : 250), 
         transition: 'all 0.3s',
-        background: '#f8fafc', // 更改背景色为淡蓝灰色
+        background: '#f8fafc',
       }}>
         <Header style={{ 
           background: 'rgba(255, 255, 255, 0.95)', 
@@ -235,7 +240,7 @@ const MainLayout: React.FC = () => {
           top: 0,
           zIndex: 99,
           width: '100%',
-          height: isMobile ? '56px' : '64px', // 移动端减小高度
+          height: isMobile ? '56px' : '64px',
           borderBottom: '1px solid #f1f5f9'
         }}>
           <Button
@@ -245,7 +250,7 @@ const MainLayout: React.FC = () => {
             onClick={() => isMobile ? setDrawerVisible(!drawerVisible) : setCollapsed(!collapsed)}
             style={{ 
               fontSize: isMobile ? '16px' : '14px',
-              color: '#4f46e5' // 主题色
+              color: '#4f46e5'
             }}
             className="hover:bg-indigo-50 transition-colors"
           />
@@ -286,7 +291,7 @@ const MainLayout: React.FC = () => {
         </Header>
         
         <Content style={{ 
-          margin: isMobile ? '12px 8px' : '24px 16px', // 移动端减小边距
+          margin: isMobile ? '12px 8px' : '24px 16px',
           padding: 0,
           minHeight: 280,
           transition: 'all 0.3s',

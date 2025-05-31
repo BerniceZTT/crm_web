@@ -21,6 +21,7 @@ interface CustomerTableProps {
   error: Error | null;
   onPageChange: (page: number, pageSize?: number) => void;
   viewCustomerDetail: (id: string) => void;
+  viewCustomerProjects: (id: string) => void; // 新增查看项目函数
   showModal: (customer?: Customer) => void;
   showAssignModal: (customer: Customer) => void;
   moveToPublicPool: (id: string) => void;
@@ -34,6 +35,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
   error,
   onPageChange,
   viewCustomerDetail,
+  viewCustomerProjects, // 新增
   showModal,
   showAssignModal,
   moveToPublicPool,
@@ -53,6 +55,7 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
     showAssignModal,
     moveToPublicPool,
     handleDelete,
+    viewCustomerProjects, 
     permissions
   );
   
@@ -79,9 +82,9 @@ const CustomerTable: React.FC<CustomerTableProps> = ({
                 pageSize: pagination.limit,
                 total: pagination.total,
                 onChange: onPageChange,
-                simple: isMobile // 移动端使用简化分页
+                simple: isMobile
               }}
-              scroll={undefined} // 移除表格自身的横向滚动
+              scroll={undefined}
               size={getTableSize()}
               className={isMobile ? 'mobile-customer-table' : ''}
             />

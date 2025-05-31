@@ -10,7 +10,8 @@ import {
   UserSwitchOutlined,
   GlobalOutlined,
   DeleteOutlined,
-  MoreOutlined
+  MoreOutlined,
+  ProjectOutlined
 } from '@ant-design/icons';
 import { 
   Customer,
@@ -73,35 +74,6 @@ export const getBaseColumns = (
       responsive: ['lg']
     },
     {
-      title: '客户进展',
-      dataIndex: 'progress',
-      key: 'progress',
-      width: 120,
-      render: (progress: CustomerProgress) => {
-        let color = '';
-        switch (progress) {
-          case CustomerProgress.SAMPLE_EVALUATION:
-            color = 'purple';
-            break;
-          case CustomerProgress.TESTING:
-            color = 'blue';
-            break;
-          case CustomerProgress.SMALL_BATCH:
-            color = 'cyan';
-            break;
-          case CustomerProgress.MASS_PRODUCTION:
-            color = 'green';
-            break;
-          case CustomerProgress.PUBLIC_POOL:
-            color = 'red';
-            break;
-          default:
-            color = 'default';
-        }
-        return <Tag color={color}>{progress}</Tag>;
-      }
-    },
-    {
       title: '产品需求',
       dataIndex: 'productNeeds',
       key: 'productNeeds',
@@ -153,6 +125,7 @@ export const getBaseColumns = (
 };
 
 // 获取操作列配置
+// 获取操作列配置 - 增加查看项目操作
 export const getActionColumn = (
   isMobile: boolean,
   viewCustomerDetail: (id: string) => void,
@@ -160,6 +133,7 @@ export const getActionColumn = (
   showAssignModal: (customer: Customer) => void,
   moveToPublicPool: (id: string) => void,
   handleDelete: (id: string) => void,
+  viewCustomerProjects: (id: string) => void, 
   permissions: {
     canViewCustomer: (customer: Customer) => boolean;
     canEditCustomer: (customer: Customer) => boolean;
@@ -172,7 +146,7 @@ export const getActionColumn = (
     title: '操作',
     key: 'action',
     fixed: 'right' as const,
-    width: isMobile ? 60 : 180, 
+    width: isMobile ? 60 : 200,
     render: (_: any, record: Customer) => {
       // 移动端使用下拉菜单
       if (isMobile) {
@@ -185,6 +159,16 @@ export const getActionColumn = (
             label: '查看详情',
             icon: <EyeOutlined />,
             onClick: () => viewCustomerDetail(record._id || '')
+          });
+        }
+
+        // 添加查看项目选项
+        if (permissions.canViewCustomer(record)) {
+          items.push({
+            key: 'viewProjects',
+            label: '查看项目',
+            icon: <ProjectOutlined />,
+            onClick: () => viewCustomerProjects(record._id || '')
           });
         }
         
@@ -216,7 +200,6 @@ export const getActionColumn = (
             icon: <GlobalOutlined />,
             danger: true,
             onClick: () => {
-              // 使用确认提示
               Modal.confirm({
                 title: '确定要将该客户移入公海吗?',
                 onOk: () => moveToPublicPool(record._id || ''),
@@ -235,7 +218,6 @@ export const getActionColumn = (
             icon: <DeleteOutlined />,
             danger: true,
             onClick: () => {
-              // 使用确认提示
               Modal.confirm({
                 title: '确定要删除该客户吗?',
                 onOk: () => handleDelete(record._id || ''),
@@ -246,7 +228,6 @@ export const getActionColumn = (
           });
         }
         
-        // 如果没有任何操作权限，则不显示下拉菜单
         if (items.length === 0) {
           return <span>-</span>;
         }
@@ -267,7 +248,7 @@ export const getActionColumn = (
         );
       }
       
-      // PC端保持原来的按钮布局
+      // PC端保持原来的按钮布局，增加查看项目按钮
       return (
         <Space size="small">
           {/* 查看详情 */}
@@ -277,6 +258,18 @@ export const getActionColumn = (
                 icon={<EyeOutlined />} 
                 size="small" 
                 onClick={() => viewCustomerDetail(record._id || '')}
+              />
+            </ResponsiveTooltip>
+          )}
+
+          {/* 查看项目 - 新增 */}
+          {permissions.canViewCustomer(record) && (
+            <ResponsiveTooltip title="查看项目">
+              <Button 
+                icon={<ProjectOutlined />} 
+                size="small" 
+                onClick={() => viewCustomerProjects(record._id || '')}
+                style={{ color: '#722ed1' }}
               />
             </ResponsiveTooltip>
           )}
@@ -314,7 +307,7 @@ export const getActionColumn = (
               >
                 <Button 
                   icon={<GlobalOutlined />} 
-                  size="small"
+                  size="small" 
                   danger
                 />
               </Popconfirm>
@@ -349,15 +342,11 @@ export const getMobileColumns = (baseColumns: any[]) => {
   // 确保索引安全访问
   const nameColumn = baseColumns[0]; // 客户名称
   const importanceColumn = baseColumns[2]; // 重要程度
-  const progressColumn = baseColumns[4]; // 客户进展
-  // 移除产品需求列的引用
   const relatedSalesColumn = baseColumns[6]; // 关联销售
 
   return [
     nameColumn,
     importanceColumn,
-    progressColumn,
-    // 移除产品需求列
     relatedSalesColumn
   ].filter(Boolean); // 过滤掉任何undefined值
 };

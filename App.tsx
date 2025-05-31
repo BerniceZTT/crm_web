@@ -8,6 +8,8 @@ import MainLayout from './layouts/MainLayout';
 import Dashboard from './pages/Dashboard';
 import CustomerManagement from './pages/CustomerManagement';
 import CustomerDetail from './pages/CustomerDetail';
+import ProjectManagement from './pages/ProjectManagement';
+import ProjectDetail from './pages/ProjectDetail';
 import ProductManagement from './pages/ProductManagement';
 import UserManagement from './pages/UserManagement';
 import AgentManagement from './pages/AgentManagement';
@@ -18,7 +20,7 @@ import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { UserRole } from './shared/types';
 import RoleBasedRoute from './components/RoleBasedRoute';
-import './styles/global.css'; // 全局样式文件
+import './styles/global.css';
 
 // 私有路由守卫
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -99,6 +101,12 @@ const AppRoutes = () => {
         <Route index element={getDefaultRoute()} />
         <Route path="customers" element={<CustomerManagement />} />
         <Route path="customers/:id" element={<CustomerDetail />} />
+        
+        {/* 项目管理相关路由 */}
+        <Route path="projects" element={<ProjectManagement />} />
+        <Route path="projects/customer/:customerId" element={<ProjectManagement />} />
+        <Route path="projects/detail/:projectId" element={<ProjectDetail />} />
+        
         <Route path="products" element={<ProductManagement />} />
         
         {/* 用户管理页面添加角色保护，仅超级管理员可访问 */}

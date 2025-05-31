@@ -201,7 +201,7 @@ export const parseCustomerFile = async (file: File): Promise<{
           const contactPerson = row['联系人'] || '';
           const contactPhone = row['联系方式'] || '';
           const address = row['公司地址'] || '';
-          const progressStr = row['客户进展'] || '';
+          const progressStr = row['客户进展'] || CustomerProgress.NORMAL;
           const annualDemandStr = row['年需求量(片)'] || row['年需求量'] || '0';
           const relatedSalesName = row['关联销售名称'] || '';
           const relatedAgentName = row['关联代理商名称'] || '';
@@ -250,7 +250,7 @@ export const parseCustomerFile = async (file: File): Promise<{
           }
           
           // 验证客户进展
-          let progress: CustomerProgress = CustomerProgress.SAMPLE_EVALUATION; // 默认值
+          let progress: CustomerProgress = CustomerProgress.NORMAL; // 默认值
           if (progressStr) {
             const validProgresses = Object.values(CustomerProgress)
               .filter(p => p !== CustomerProgress.PUBLIC_POOL); // 过滤掉不能直接设置的公海状态

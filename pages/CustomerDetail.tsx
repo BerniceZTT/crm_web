@@ -114,14 +114,7 @@ const CustomerDetail: React.FC = () => {
   } = useData<{ history: CustomerAssignmentHistory[] }>(id ? `/api/customer-assignments/${id}` : null);
 
   const assignmentHistory = historyData?.history || [];
-  
-  const {
-    data: progressHistoryData,
-    isLoading: progressHistoryLoading,
-    error: progressHistoryError
-  } = useData<CustomerProgressHistory[]>(id ? `/api/customer-progress/${id}` : null);
-  
-  const progressHistory = progressHistoryData || [];
+
   
   const publicPoolHistory = useMemo(() => {
     return assignmentHistory.filter(history => 
@@ -192,17 +185,7 @@ const CustomerDetail: React.FC = () => {
       </div>
     );
   }
-  
-  const getProgressColor = (progress: CustomerProgress) => {
-    const colorMap = {
-      [CustomerProgress.SAMPLE_EVALUATION]: 'purple',
-      [CustomerProgress.TESTING]: 'blue',
-      [CustomerProgress.SMALL_BATCH]: 'cyan',
-      [CustomerProgress.MASS_PRODUCTION]: 'green',
-      [CustomerProgress.PUBLIC_POOL]: 'red'
-    };
-    return colorMap[progress] || 'default';
-  };
+
   
   const getImportanceColor = (importance: CustomerImportance) => {
     const colorMap = {
@@ -323,16 +306,9 @@ const CustomerDetail: React.FC = () => {
             </Title>
             <div className="flex flex-wrap">
               <Tag 
-                color={getProgressColor(customer.progress)} 
-                className="mr-1 mb-1"
-                style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-              >
-                {customer.progress}
-              </Tag>
-              <Tag 
                 color={getImportanceColor(customer.importance)}
                 className="mb-1"
-                style={{ maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                style={{  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
               >
                 {customer.importance}
               </Tag>
@@ -388,68 +364,10 @@ const CustomerDetail: React.FC = () => {
             bodyStyle={isMobile ? { padding: '12px 8px' } : {}}
           >
             <Tabs 
-              defaultActiveKey="progressHistory" 
+              defaultActiveKey="opportunities" 
               type={isMobile ? "card" : "line"}
               size={isMobile ? "small" : "large"}
               items={[
-                {
-                  key: 'progressHistory',
-                  label: <span><HistoryOutlined />进展历史</span>,
-                  children: (
-                    <>
-                      {progressHistoryLoading ? (
-                        <div className="flex justify-center my-8">
-                          <Spin tip="加载中..." />
-                        </div>
-                      ) : progressHistory.length === 0 ? (
-                        <Empty description="暂无进展历史记录" />
-                      ) : (
-                        <Timeline>
-                          {progressHistory.map((record, index) => (
-                            <Timeline.Item 
-                              key={record._id || index} 
-                              color={record.toProgress === CustomerProgress.MASS_PRODUCTION ? "green" : 
-                                     record.toProgress === CustomerProgress.PUBLIC_POOL ? "red" : "blue"}
-                            >
-                              <div className="mb-2">
-                                <Text strong style={{ fontSize: isMobile ? '14px' : '16px' }}>
-                                  进展变更
-                                </Text>
-                                <Text 
-                                  type="secondary" 
-                                  className="ml-3" 
-                                  style={{ fontSize: isMobile ? '12px' : '14px' }}
-                                >
-                                  {record.createdAt ? new Date(record.createdAt).toLocaleDateString() + ' ' + 
-                                    new Date(record.createdAt).toLocaleTimeString() : '-'}
-                                </Text>
-                              </div>
-                              <div className="mb-2" style={{ fontSize: isMobile ? '13px' : '14px' }}>
-                                客户进展从「
-                                <Tag color={getProgressColor(record.fromProgress as CustomerProgress)}>
-                                  {record.fromProgress}
-                                </Tag>
-                                」变更为「
-                                <Tag color={getProgressColor(record.toProgress as CustomerProgress)}>
-                                  {record.toProgress}
-                                </Tag>
-                                」
-                              </div>
-                              {record.remark && (
-                                <div className="mt-1 bg-gray-50 p-3 rounded" style={{ fontSize: isMobile ? '13px' : '14px' }}>
-                                  备注: {record.remark}
-                                </div>
-                              )}
-                              <div className="text-gray-500" style={{ fontSize: isMobile ? '12px' : '13px' }}>
-                                操作人: {record.operatorName}
-                              </div>
-                            </Timeline.Item>
-                          ))}
-                        </Timeline>
-                      )}
-                    </>
-                  )
-                },
                 {
                   key: 'opportunities',
                   label: <span><TeamOutlined />操作记录</span>,
@@ -615,18 +533,6 @@ const CustomerDetail: React.FC = () => {
                   </p>
                   <p className="text-gray-500 text-sm">
                     由 {publicPoolHistory[0].operatorName} 跟进
-                  </p>
-                </Timeline.Item>
-              )}
-              
-              {progressHistory.length > 0 && (
-                <Timeline.Item color="orange">
-                  <p>最近进展变更</p>
-                  <p className="text-gray-500 text-sm">
-                    从 {progressHistory[0].fromProgress} 变更为 {progressHistory[0].toProgress}
-                  </p>
-                  <p className="text-gray-500 text-sm">
-                    {progressHistory[0].createdAt ? formatDateTime(progressHistory[0].createdAt) : '-'}
                   </p>
                 </Timeline.Item>
               )}

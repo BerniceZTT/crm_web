@@ -18,15 +18,13 @@ export default defineConfig({
     port: 3001,
     host: '0.0.0.0', // 关键修改：允许外部访问
     open: false,
+    allowedHosts: [
+      'starrystonetech.com.cn',    // 允许主域名
+      'www.starrystonetech.com.cn' // 允许 www 子域名
+    ],
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
-        host: '0.0.0.0', // 允许外部访问
-        port: 3001,      // 指定端口
-        allowedHosts: [
-          'starrystonetech.com.cn',    // 允许主域名
-          'www.starrystonetech.com.cn' // 允许 www 子域名
-        ],
         changeOrigin: true,
         secure: false,
       }

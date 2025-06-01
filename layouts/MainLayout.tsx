@@ -151,9 +151,6 @@ const MainLayout: React.FC = () => {
   
   // 获取标题内容
   const getTitleContent = () => {
-    if (user?.role === UserRole.INVENTORY_MANAGER) {
-      return '库存管理系统';
-    }
     return '乾芯CRM系统';
   };
   

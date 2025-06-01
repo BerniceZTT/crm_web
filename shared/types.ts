@@ -275,15 +275,24 @@ export interface DashboardDataResponse {
   customerCount: number;
   productCount: number;
   agentCount: number;
+  projectCount: number; // 新增：项目总数
+  
+  // 客户维度统计（去掉客户进展状态）
   customerImportance: ChartDataItem[];
-  customerProgress: ChartDataItem[];
   customerNature: ChartDataItem[];
-  // 产品维度统计
-  productPackageType: ChartDataItem[]; // 产品包装类型分布
-  productStockLevel: ChartDataItem[]; // 产品库存等级分布
-  // 新增产品与客户关系统计
-  productCustomerRelation: ChartDataItem[]; // 产品客户关联数量分布
-  productProgressDistribution: ProductProgressDistribution[]; // 产品按客户进展阶段分布
+  
+  // 产品维度统计（去掉产品与客户进展阶段关系）
+  productPackageType: ChartDataItem[];
+  productStockLevel: ChartDataItem[];
+  productCustomerRelation: ChartDataItem[];
+  productProjectRelation: ChartDataItem[]; // 新增：产品项目关联数量Top10
+  
+  // 新增：项目维度统计
+  projectProgressDistribution: ChartDataItem[]; // 项目按进展状态分布
+  projectBatchTotalStats: ProjectBatchStats; // 批量总额统计
+  projectSmallBatchTotalStats: ProjectBatchStats; // 小批量总额统计
+  projectMonthlyStats: ProjectMonthlyStats[]; // 项目月度统计
+  topProjectsByValue: ProjectValueItem[]; // 按金额排序的项目Top10
 }
 
 // 图表数据项类型
@@ -292,13 +301,33 @@ export interface ChartDataItem {
   value: number;
 }
 
-// 新增：产品按客户进展阶段分布
-export interface ProductProgressDistribution {
-  productName: string;
-  sample: number;
-  testing: number;
-  smallBatch: number;
-  massProduction: number;
+// 新增：项目批次统计类型
+export interface ProjectBatchStats {
+  totalAmount: number; // 总金额（万元）
+  totalProjects: number; // 项目总数
+  maxAmount: number; // 最大金额（万元）
+  minAmount: number; // 最小金额（万元）
+  // 删除 averageAmount 字段
+}
+
+// 新增：项目月度统计类型
+export interface ProjectMonthlyStats {
+  month: string; // 月份，格式：YYYY-MM
+  projectCount: number; // 项目数量
+  totalAmount: number; // 总金额（万元）
+  batchAmount: number; // 批量总额（万元）
+  smallBatchAmount: number; // 小批量总额（万元）
+}
+
+// 新增：项目价值排行类型
+export interface ProjectValueItem {
+  projectName: string;
+  customerName: string;
+  productName?: string; // 产品名称（型号/封装）
+  smallBatchTotal: number; // 小批量总额（万元）
+  massProductionTotal: number; // 批量总额（万元）
+  totalValue: number; // 总价值（批量+小批量，万元）
+  progress: string; // 项目进展
 }
 
 // 项目进展枚举 - 恢复完整的项目阶段状态

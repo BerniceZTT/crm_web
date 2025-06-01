@@ -13,13 +13,16 @@ importers:
         version: 5.6.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       antd:
         specifier: 5.10.0
-        version: 5.10.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+        version: 5.10.0(moment@2.29.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       dayjs:
         specifier: ^1.11.7
         version: 1.11.13
       framer-motion:
         specifier: ^11.9.0
         version: 11.18.2(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      moment:
+        specifier: 2.29.4
+        version: 2.29.4
       react:
         specifier: ^18.2.0
         version: 18.3.1
@@ -1187,6 +1190,9 @@ packages:
   minipass@7.1.2:
     resolution: {integrity: sha512-qOOzS1cBTWYF4BH8fVePDBOO9iptMnGUEZwNc/cMWnTV2nVLZ7VoNWEPHkYczZA0pdoA7dl6e7FL659nX9S2aw==}
     engines: {node: '>=16 || 14 >=14.17'}
+
+  moment@2.29.4:
+    resolution: {integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==}
 
   motion-dom@11.18.1:
     resolution: {integrity: sha512-g76KvA001z+atjfxczdRtw/RXOM3OMSdd1f4DL77qCTF/+avrRJiawSG4yDibEQ215sr9kpinSlX2pCTJ9zbhw==}
@@ -2468,7 +2474,7 @@ snapshots:
 
   ansi-styles@6.2.1: {}
 
-  antd@5.10.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  antd@5.10.0(moment@2.29.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@ant-design/colors': 7.2.0
       '@ant-design/cssinjs': 1.23.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -2499,7 +2505,7 @@ snapshots:
       rc-motion: 2.9.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-notification: 5.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-pagination: 3.6.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      rc-picker: 3.14.7(dayjs@1.11.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      rc-picker: 3.14.7(dayjs@1.11.13)(moment@2.29.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-progress: 3.5.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-rate: 2.12.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       rc-resize-observer: 1.4.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3064,6 +3070,8 @@ snapshots:
 
   minipass@7.1.2: {}
 
+  moment@2.29.4: {}
+
   motion-dom@11.18.1:
     dependencies:
       motion-utils: 11.18.1
@@ -3348,7 +3356,7 @@ snapshots:
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
 
-  rc-picker@3.14.7(dayjs@1.11.13)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
+  rc-picker@3.14.7(dayjs@1.11.13)(moment@2.29.4)(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:
       '@babel/runtime': 7.27.1
       '@rc-component/trigger': 1.18.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -3358,6 +3366,7 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
     optionalDependencies:
       dayjs: 1.11.13
+      moment: 2.29.4
 
   rc-progress@3.5.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:

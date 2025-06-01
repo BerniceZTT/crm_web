@@ -87,16 +87,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
         
         const response = await Promise.race([validatePromise, timeoutPromise]);
-        
+        console.log('response', response)
+
         if (response && response.user) {
           const validatedUser = response.user;
-          if(validatedUser.username == null && validatedUser.name){
-            validatedUser.username= validatedUser.name
-            validatedUser._id = validatedUser.id
-          }
-          if(validatedUser._id == null && validatedUser.id){
-            validatedUser._id = validatedUser.id
-          }
           console.log(`Token验证成功! 用户: ${validatedUser.username || validatedUser.companyName}, 角色: ${validatedUser.role}`);
           setUser(validatedUser);
           setAuthError(null);

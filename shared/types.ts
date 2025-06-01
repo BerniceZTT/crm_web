@@ -30,8 +30,8 @@ export interface User {
   createdAt?: Date;
   updatedAt?: Date;
   rejectionReason?: string; // 拒绝原因
-  relatedSalesId?: string; // 关联销售ID - 添加此字段
-  relatedSalesName?: string; // 关联销售名称 - 添加此字段
+  relatedSalesId?: string; // 关联销售ID
+  relatedSalesName?: string; // 关联销售名称
 }
 
 // 代理商类型

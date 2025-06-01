@@ -67,9 +67,6 @@ const PublicPoolManagement: React.FC = () => {
   
   const [selectedSalesId, setSelectedSalesId] = useState<string>(user?.role === UserRole.FACTORY_SALES? user?._id: (user?.role === UserRole.AGENT? user?.relatedSalesId : ''));
   const [selectedAgentId, setSelectedAgentId] = useState<string>(user?.role === UserRole.AGENT? user?._id: '');
-  
-  console.log('user, selectedSalesId', user, selectedSalesId)
-
   const isSuperAdmin = user?.role === UserRole.SUPER_ADMIN;
   
   const canAssign = user ? publicPoolPermissions.canAssign(user.role as UserRole) : false;

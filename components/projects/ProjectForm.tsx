@@ -19,8 +19,8 @@ import {
   Space,
   Tooltip
 } from 'antd';
-import { 
-  UploadOutlined, 
+import {
+  UploadOutlined,
   DeleteOutlined,
   PlusOutlined,
   DownloadOutlined
@@ -65,7 +65,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
     setProjectProgress(ProjectProgress.SAMPLE_EVALUATION);
     setSmallBatchFiles([]);
     setMassProductionFiles([]);
-    
+
     // 确保表单字段完全重置
     form.resetFields();
     form.setFieldsValue({
@@ -73,7 +73,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
       smallBatchAttachments: [],
       massProductionAttachments: []
     });
-    
+
     console.log('ProjectForm内部状态重置完成');
   }, [form]);
 
@@ -82,7 +82,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
     if (!currentProject || mode === 'create') {
       // 新建模式时，完全重置
       resetAllInternalState();
-      
+
       // 如果有customerId，预填充客户信息
       if (customerId && mode === 'create') {
         form.setFieldsValue({ customerId });
@@ -93,7 +93,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
       setProjectProgress(currentProject.projectProgress || ProjectProgress.SAMPLE_EVALUATION);
       setSmallBatchFiles(currentProject.smallBatchAttachments || []);
       setMassProductionFiles(currentProject.massProductionAttachments || []);
-      
+
       // 设置表单值
       form.setFieldsValue({
         ...currentProject,
@@ -114,7 +114,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
     const progress = form.getFieldValue('projectProgress');
     if (progress) {
       setProjectProgress(progress);
-      
+
       // 当进展变为批量出货时，清空小批量验证错误
       if (progress === ProjectProgress.MASS_PRODUCTION) {
         // 清除小批量字段的验证错误
@@ -178,11 +178,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
   // 动态生成小批量字段的验证规则
   const getSmallBatchValidationRules = (fieldName: string) => {
     const shouldValidate = shouldShowSmallBatchFields();
-    
+
     if (!shouldValidate) {
       return []; // 不显示时不验证
     }
-    
+
     switch (fieldName) {
       case 'smallBatchPrice':
         return [{ required: true, message: '请输入小批量报价' }];
@@ -231,33 +231,33 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
   // 修复多文件上传处理逻辑
   const handleFileUpload = async (info: any, fieldType: 'small' | 'mass') => {
     const { fileList } = info;
-    
+
     console.log('开始处理文件列表:', fileList.length, '个文件');
-    
+
     try {
       const processedFiles: FileAttachment[] = [];
-      
+
       // 处理所有文件
       for (const file of fileList) {
         if (file.status === 'error') {
           message.error(`${file.name} 处理失败`);
           continue;
         }
-        
+
         // 检查是否已经处理过
         const existingFiles = fieldType === 'small' ? smallBatchFiles : massProductionFiles;
         const isAlreadyProcessed = existingFiles.some(f => f.originalName === file.name && f.fileSize === file.size);
-        
+
         if (isAlreadyProcessed) {
           console.log('文件已存在，跳过:', file.name);
           continue;
         }
-        
+
         console.log('处理新文件:', file.name, '类型:', file.type);
-        
+
         // 将文件转换为base64用于存储
         const base64Url = await fileToBase64(file.originFileObj || file);
-        
+
         // 创建新的文件附件对象
         const newFile: FileAttachment = {
           id: generateFileId(),
@@ -269,11 +269,11 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
           uploadedBy: '当前用户',
           url: base64Url
         };
-        
+
         processedFiles.push(newFile);
         console.log('文件处理完成:', newFile.originalName, '大小:', newFile.fileSize);
       }
-      
+
       if (processedFiles.length > 0) {
         if (fieldType === 'small') {
           const updatedFiles = [...smallBatchFiles, ...processedFiles];
@@ -311,13 +311,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
   const handleFileDownload = async (file: FileAttachment) => {
     try {
       console.log('开始下载文件:', file.originalName);
-      
+
       if (mode === 'create' || !currentProject?._id) {
         // 新建模式下，文件还没有保存到服务器，直接使用本地base64数据
         const link = document.createElement('a');
         link.href = file.url;
         link.download = file.originalName;
-        
+
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
@@ -331,20 +331,20 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
             'Content-Type': 'application/json'
           }
         });
-        
+
         if (!response.ok) {
           const errorData = await response.json();
           throw new Error(errorData.error || '下载失败');
         }
-        
+
         const result = await response.json();
-        
+
         if (result.success && result.file) {
           // 使用服务器返回的文件信息进行下载
           const link = document.createElement('a');
           link.href = result.file.url;
           link.download = result.file.originalName;
-          
+
           document.body.appendChild(link);
           link.click();
           document.body.removeChild(link);
@@ -453,8 +453,13 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                 placeholder="请选择产品型号"
                 showSearch
                 optionFilterProp="children"
-                filterOption={(input, option) =>
-                  (option?.children as unknown as string)?.toLowerCase()?.includes(input.toLowerCase())
+                filterOption={(input, option) => {
+                  const children = option?.children ?? "";
+                  if (typeof children === "string") {
+                    return children.toLowerCase().includes(input.toLowerCase());
+                  }
+                  return false;
+                }
                 }
               >
                 {products.map((product: Product) => (
@@ -563,8 +568,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                   accept=".pdf,.doc,.docx,.xls,.xlsx,.jpg,.jpeg,.png,.gif,.bmp,.webp"
                   multiple
                 >
-                  <Button 
-                    icon={<PlusOutlined />} 
+                  <Button
+                    icon={<PlusOutlined />}
                     disabled={shouldDisableSmallBatchFields()}
                   >
                     选择文件

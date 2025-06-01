@@ -4,7 +4,7 @@
  * 优化了响应式布局，使整个页面滚动而非表格横向滚动
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Card, 
   Button, 
@@ -44,7 +44,7 @@ const { TabPane } = Tabs;
 const fetcher = async (url: string) => {
   try {
     console.log(`[SWR] 请求 ${url}`);
-    
+        
     // 使用 api 工具类发送请求，它会自动添加认证头
     const data = await api.get(url);
     
@@ -243,7 +243,7 @@ const ProductManagement: React.FC = () => {
     
     setInventoryModalVisible(true);
   };
-
+  
     // 删除用户
     const handleDelete = async (id: string) => {
       try {
@@ -482,7 +482,7 @@ const ProductManagement: React.FC = () => {
       setImportLoading(false);
     }
   };
-    
+  
   // 导出产品数据为XLSX - 修改为导出xlsx格式
   const exportProductsToXLSX = () => {
     try {
@@ -501,15 +501,15 @@ const ProductManagement: React.FC = () => {
           });
         }
         if (user?.role == UserRole.FACTORY_SALES) {
-          return {
-            '产品型号': product.modelName,
-            '封装型号': product.packageType,
-            '库存数量': product.stock,
-            '创建时间': product.createdAt ? new Date(product.createdAt).toLocaleString() : '-',
-            '更新时间': product.updatedAt ? new Date(product.updatedAt).toLocaleString() : '-',
-            ...pricingData
-          };
-        }
+        return {
+          '产品型号': product.modelName,
+          '封装型号': product.packageType,
+          '库存数量': product.stock,
+          '创建时间': product.createdAt ? new Date(product.createdAt).toLocaleString() : '-',
+          '更新时间': product.updatedAt ? new Date(product.updatedAt).toLocaleString() : '-',
+          ...pricingData
+        };
+    }
         if (user?.role == UserRole.INVENTORY_MANAGER) {
           return {
             '产品型号': product.modelName,
@@ -517,7 +517,7 @@ const ProductManagement: React.FC = () => {
             '库存数量': product.stock,
             '创建时间': product.createdAt ? new Date(product.createdAt).toLocaleString() : '-',
             '更新时间': product.updatedAt ? new Date(product.updatedAt).toLocaleString() : '-',
-          };
+  };
         }
         // 合并基本数据和阶梯价格
         return {
@@ -610,6 +610,30 @@ const ProductManagement: React.FC = () => {
     setFileList([]); // 添加这行，确保关闭弹窗时清空文件列表
   };
   
+  // 添加当前激活的标签页状态
+  const [activeTab, setActiveTab] = useState('products');
+  
+  // 处理标签页切换
+  const handleTabChange = useCallback((key: string) => {
+    setActiveTab(key);
+    
+    // 当切换到库存记录标签页时，重新请求库存记录数据
+    if (key === 'inventory') {
+      console.log('[库存记录] 标签页被激活，重新请求库存记录数据');
+      if (mutateRecords) {
+        mutateRecords(); // 重新请求库存记录数据
+      }
+    }
+    
+    // 当切换到产品管理标签页时，重新请求产品数据
+    if (key === 'products') {
+      console.log('[产品管理] 标签页被激活，重新请求产品数据');
+      if (mutate) {
+        mutate(); // 重新请求产品数据
+      }
+    }
+  }, [mutateRecords, mutate]);
+  
   return (
     <div className="overflow-x-hidden">
       {isInventoryManager && (
@@ -620,7 +644,11 @@ const ProductManagement: React.FC = () => {
         />
       )}
       
-      <Tabs defaultActiveKey="products">
+      <Tabs 
+        defaultActiveKey="products"
+        activeKey={activeTab}
+        onChange={handleTabChange}
+      >
         <TabPane 
           tab="产品管理" 
           key="products"

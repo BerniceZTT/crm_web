@@ -21,7 +21,12 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://localhost:8080',
-        // target: 'http://47.113.230.108:8080', // 改为你的后端真实地址
+        host: '0.0.0.0', // 允许外部访问
+        port: 3001,      // 指定端口
+        allowedHosts: [
+          'starrystonetech.com.cn',    // 允许主域名
+          'www.starrystonetech.com.cn' // 允许 www 子域名
+        ],
         changeOrigin: true,
         secure: false,
       }

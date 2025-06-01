@@ -13,6 +13,7 @@ export default defineConfig({
       'pages': resolve(__dirname, 'pages'),
     }
   },
+  base: '/',  // 如果部署在子路径（如/blog），需改为'/blog/'
   server: {
     port: 3001,
     host: '0.0.0.0', // 关键修改：允许外部访问

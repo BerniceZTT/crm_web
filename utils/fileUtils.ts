@@ -194,8 +194,8 @@ export const parseCustomerFile = async (file: File): Promise<{
             continue;
           }
           
-          const natureStr = row['客户性质'] || '';
-          const importanceStr = row['客户重要程度'] || '';
+          const natureStr = safeExtractAndTrim(row['客户性质']) || '';
+          const importanceStr = safeExtractAndTrim(row['客户重要程度']) || '';
           const applicationField = row['应用领域'] || '';
           const productNeedsStr = row['产品需求(产品名称，用逗号分隔)'] || row['产品需求'] || '';
           const contactPerson = row['联系人'] || '';
@@ -351,4 +351,14 @@ export const parseCustomerFile = async (file: File): Promise<{
     // 将文件读取为二进制字符串
     reader.readAsBinaryString(file);
   });
+};
+
+/**
+ * 安全地提取并去除前后空格的字符串值
+ */
+const safeExtractAndTrim = (value: any): string => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value).trim();
 };

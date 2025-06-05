@@ -80,10 +80,8 @@ export const useCustomerManagement = () => {
     
     // 将所有非空查询参数添加到URL中
     Object.entries(queryParams).forEach(([key, value]) => {
-      if(key != "page" && key != "limit"){
-        if (value !== undefined && value !== null && value !== '') {
-          params.append(key, String(value));
-        }
+      if (value !== undefined && value !== null && value !== '') {
+        params.append(key, String(value));
       }
     });
     
@@ -102,6 +100,15 @@ export const useCustomerManagement = () => {
     pages: 1 
   };
   
+  // 修正分页信息，确保当前页使用本地状态
+  const correctedPagination = {
+    ...pagination,
+    page: queryParams.page, // 使用本地查询参数的页码
+    limit: queryParams.limit, // 使用本地查询参数的页面大小
+    total: pagination.total, // 使用服务端返回的总数
+    pages: Math.ceil(pagination.total / queryParams.limit) // 重新计算总页数
+  };
+
   // 统一的查询条件更新函数 - 处理所有搜索和筛选操作
   const updateQueryParams = useCallback((updates: Partial<typeof queryParams>) => {
     setQueryParams(prev => {
@@ -408,7 +415,7 @@ export const useCustomerManagement = () => {
     },
     keyword: queryParams.keyword,
     customers,
-    pagination,
+    pagination: correctedPagination, // 使用修正后的分页信息
     error,
     isLoading,
     modalVisible,

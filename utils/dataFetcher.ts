@@ -192,15 +192,19 @@ export function useData<T>(url: string | null, options?: {
     }
     
     try {
-      // 更明确的强制刷新条件
-      const shouldSkipCache = skipCache || options?.forceRefresh || pageActivated;
+      // 对于分页请求，总是跳过缓存以确保数据的实时性
+      const isPageRequest = url.includes('page=') || url.includes('limit=');
+      const shouldSkipCache = skipCache || options?.forceRefresh || pageActivated || isPageRequest;
       
       // 强制刷新时额外打印日志
       if (skipCache) {
         console.log(`[Cache] 明确要求跳过缓存: ${url}`);
       }
       
-      // 使用缓存数据的条件更严格
+      if (isPageRequest) {
+        console.log(`[Cache] 检测到分页请求，跳过缓存: ${url}`);
+      }
+      
       if (!shouldSkipCache && isCacheValid(url)) {
         console.log(`[Cache] 使用有效缓存: ${url}`);
         const cachedData = cache[url];
@@ -227,7 +231,12 @@ export function useData<T>(url: string | null, options?: {
       // 重置重试标记 - 成功获取数据
       setShouldRetry(true);
       
-      // 额外检查数据是否确实发生了变化
+      if (pageActivated) {
+        pageActivated = false;
+        console.log('[Cache] 重置页面激活标记');
+      }
+      
+      console.log(`[Cache] 数据获取完成: ${url}`);
     } catch (err) {
       console.error(`获取数据失败: ${url}`, err);
       setError(err instanceof Error ? err : new Error(String(err)));

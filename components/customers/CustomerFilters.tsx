@@ -4,9 +4,9 @@
  * 增强版 - 同时支持客户管理和公海池筛选
  */
 import React, { useEffect, useState } from 'react';
-import { Card, Collapse, Select, Input, Row, Col, Button, Tag, Space } from 'antd';
-import { FilterOutlined, SearchOutlined, ReloadOutlined, CloseCircleOutlined } from '@ant-design/icons';
-import { CustomerNature, CustomerImportance, CustomerProgress } from '../../shared/types';
+import { Card, Collapse, Select, Input, Row, Col, Button, Tag } from 'antd';
+import { FilterOutlined, ReloadOutlined } from '@ant-design/icons';
+import { CustomerNature, CustomerImportance } from '../../shared/types';
 import { useResponsive } from '../../hooks/useResponsive';
 import { motion } from 'framer-motion';
 
@@ -65,59 +65,6 @@ const CustomerFilters: React.FC<CustomerFiltersProps> = ({
     }
   };
   
-  // 单个筛选条件清除
-  const handleClearFilter = (field: string) => {
-    onFilterChange(field, undefined);
-  };
-  
-  // 获取已选筛选条件标签
-  const getSelectedFilterTags = () => {
-    const tags = [];
-    
-    Object.entries(filters).forEach(([field, value]) => {
-      if (value !== undefined && value !== null && value !== '') {
-        let label = '';
-        let displayValue = value;
-        
-        switch (field) {
-          case 'nature':
-            label = '客户性质';
-            break;
-          case 'importance':
-            label = '重要程度';
-            break;
-          case 'isInPublicPool':
-            label = '客户池';
-            displayValue = value === true ? '公海客户' : '私海客户';
-            break;
-          case 'applicationField':
-            label = '应用领域';
-            break;
-          default:
-            label = field;
-        }
-        
-        tags.push(
-          <Tag 
-            key={field}
-            closable
-            onClose={() => handleClearFilter(field)}
-            color="blue"
-            className="mb-2"
-          >
-            {label}: {displayValue}
-          </Tag>
-        );
-      }
-    });
-    
-    return tags;
-  };
-  
-  // 判断是否有活跃的筛选条件
-  const hasActiveFilters = Object.values(filters).some(value => 
-    value !== undefined && value !== null && value !== ''
-  );
 
   return (
     <motion.div

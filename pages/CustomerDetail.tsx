@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Card, 
   Descriptions, 
@@ -7,12 +7,9 @@ import {
   Tag, 
   Form, 
   Input, 
-  Select, 
   Modal, 
   message, 
   Timeline,
-  Divider,
-  Statistic,
   Row,
   Col,
   Typography,
@@ -25,28 +22,19 @@ import {
   PhoneOutlined,
   EnvironmentOutlined,
   TeamOutlined,
-  ClockCircleOutlined,
   PlusOutlined,
   DeleteOutlined,
-  ImportOutlined,
-  ExportOutlined,
-  HistoryOutlined,
   UserOutlined
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   Customer, 
-  CustomerNature, 
   CustomerImportance, 
-  CustomerProgress,
-  UserRole,
   FollowUpRecord,
   CustomerAssignmentHistory,
-  CustomerProgressHistory, 
   Product
 } from '../shared/types';
-import { useAuth } from '../contexts/AuthContext';
-import { useData, mutateData } from '../utils/dataFetcher';
+import { useData } from '../utils/dataFetcher';
 import { api } from '../utils/api';
 import { useResponsive } from '../hooks/useResponsive';
 
@@ -56,7 +44,6 @@ const { TextArea } = Input;
 const CustomerDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
   
   const [followUpForm] = Form.useForm();
   
@@ -74,9 +61,7 @@ const CustomerDetail: React.FC = () => {
   const { 
     data: customerData, 
     isLoading: customerLoading, 
-    error: customerError,
-    mutate: mutateCustomer
-  } = useData<{ customer: Customer }>(id ? `/api/customers/${id}` : null);
+    error: customerError  } = useData<{ customer: Customer }>(id ? `/api/customers/${id}` : null);
   
   const customer = customerData?.customer;
   
@@ -101,7 +86,6 @@ const CustomerDetail: React.FC = () => {
   const {
     data: followUpData,
     isLoading: followUpRecordsLoading,
-    error: followUpRecordsError,
     mutate: mutateFollowUpRecords
   } = useData<{ records: FollowUpRecord[] }>(id ? `/api/followUpRecords/${id}` : null);
   
@@ -109,18 +93,16 @@ const CustomerDetail: React.FC = () => {
 
   const {
     data: historyData,
-    isLoading: historyLoading,
-    error: historyError
-  } = useData<{ history: CustomerAssignmentHistory[] }>(id ? `/api/customer-assignments/${id}` : null);
+    isLoading: historyLoading  } = useData<{ history: CustomerAssignmentHistory[] }>(id ? `/api/customer-assignments/${id}` : null);
 
   const assignmentHistory = historyData?.history || [];
 
   
   const publicPoolHistory = useMemo(() => {
     return assignmentHistory.filter(history => 
-      history.operationType === 'publicPool' || 
-      history.operationType === 'assign' ||
-      history.operationType === '跟进'
+      history.operationType === '跟进' ||
+      history.operationType === '分配' ||
+      history.operationType === '认领'
     );
   }, [assignmentHistory]);
   
@@ -199,38 +181,26 @@ const CustomerDetail: React.FC = () => {
   const getOperationColor = (operationType: string) => {
     const colorMap: Record<string, string> = {
       '分配': 'green',
+      '认领': 'green',
       '跟进': 'blue',
       '移入公海池': 'red',
       '新建分配': 'orange',
       '新建跟进': 'purple',
-      'publicPool': 'red',
       'assign': 'green',
-      'cancel': 'orange'
     };
     return colorMap[operationType] || 'blue';
   };
 
   const formatOperationType = (history: CustomerAssignmentHistory) => {
-    if (['分配', '跟进', '移入公海池', '新建分配', '新建跟进'].includes(history.operationType)) {
+    if (['分配', '认领', '跟进', '移入公海池', '新建分配', '新建跟进'].includes(history.operationType)) {
       return history.operationType;
     }
     
-    if (history.operationType === 'publicPool') {
-      return '移入公海池';
-    } else if (history.operationType === 'assign') {
-      if (!history.fromRelatedSalesId || history.fromRelatedSalesId === null) {
-        return '跟进';
-      } else {
-        return '分配';
-      }
-    } else if (history.operationType === 'cancel') {
-      return '取消分配';
-    }
     return history.operationType??'未知操作';
   };
 
   const formatOperationContent = (history: CustomerAssignmentHistory) => {
-    if (['分配', '跟进', '移入公海池', '新建分配', '新建跟进'].includes(history.operationType)) {
+    if (['分配', '认领','跟进', '移入公海池', '新建分配', '新建跟进'].includes(history.operationType)) {
       if (history.operationType === '移入公海池') {
         const fromName = history.fromRelatedSalesName;
         if(history.fromRelatedAgentName){
@@ -255,6 +225,20 @@ const CustomerDetail: React.FC = () => {
           return `新建客户并分配给「${toName}(销售)」「${history.toRelatedAgentName}(代理商)」`;
         } else {
           return `新建客户并分配给「${toName}(销售)」`;
+        }
+      } else if (history.operationType === '认领') {
+        const fromName = history.fromRelatedSalesName || '未知';
+        const toName = history.toRelatedSalesName || '未知';
+        
+        if (history.fromRelatedAgentName && history.toRelatedAgentName && 
+            history.fromRelatedAgentName !== history.toRelatedAgentName) {
+          return `客户从 「${fromName}(销售)」「${history.fromRelatedAgentName}(代理商)」认领至「${toName}(销售)」「${history.toRelatedAgentName}(代理商)」`;
+        } else if (history.fromRelatedAgentName && !history.toRelatedAgentName) {
+          return `客户从「${fromName}(销售)」「${history.fromRelatedAgentName}(代理商)」认领至「${toName}(销售)」(无代理商)`;
+        } else if (!history.fromRelatedAgentName && history.toRelatedAgentName) {
+          return `客户从「${fromName}(销售)」(无代理商)分配给「${toName}(销售)」「${history.toRelatedAgentName}(代理商)」`;
+        } else {
+          return `客户从「${fromName}(销售)」认领至「${toName}(销售)」`;
         }
       } else { // 分配
         const fromName = history.fromRelatedSalesName || '未知';
@@ -525,7 +509,7 @@ const CustomerDetail: React.FC = () => {
                 </p>
               </Timeline.Item>
               
-              {publicPoolHistory.length > 0 && (publicPoolHistory[0].operationType === 'assign' || publicPoolHistory[0].operationType === '跟进') && (
+              {publicPoolHistory.length > 0 && (publicPoolHistory[0].operationType === '跟进') && (
                 <Timeline.Item color="blue">
                   <p>最近跟进</p>
                   <p className="text-gray-500 text-sm">

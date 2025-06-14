@@ -65,8 +65,10 @@ export enum CustomerImportance {
 
 // 客户进展枚举
 export enum CustomerProgress {
-  NORMAL = '正常',
-  PUBLIC_POOL = '进入公海'
+  InitialContact = '初步接触',
+  NORMAL = '正常推进',
+  PUBLIC_POOL = '进入公海',
+  Disabled = '禁用'
 }
 
 // 客户进展历史记录接口
@@ -111,9 +113,9 @@ export interface Customer {
   relatedAgentName?: string;
   
   isInPublicPool: boolean;
-  lastUpdateTime?: Date;
-  createdAt?: Date;
-  updatedAt?: Date;
+  lastUpdateTime?: string;
+  createdAt?: string;
+  updatedAt?: string;
   previousOwnerId?: string; // 上一个所有者ID
   previousOwnerName?: string; // 上一个所有者名称
   previousOwnerType?: string; // 上一个所有者类型
@@ -150,9 +152,15 @@ export interface FollowUpRecord {
   creatorId: string;
   creatorName: string;
   creatorType: string;
-  createdAt?: Date;
-  updatedAt?: Date;
+  createdAt?: string;
+  updatedAt?: string;
 }
+
+export interface AssignableUsers {
+  agents: AgentBrief[];
+  salesUsers: UserBrief[];
+}
+
 
 // 用户简要信息类型(用于选择列表)
 export interface UserBrief {
@@ -166,6 +174,8 @@ export interface AgentBrief {
   _id: string;
   companyName: string;
   contactPerson: string;
+  relatedSalesId?: string;
+  relatedSalesName?:string;
 }
 
 // 审批请求参数类型
@@ -212,10 +222,9 @@ export interface CustomerAssignmentHistory {
   
   operatorId: string;
   operatorName: string;
-  operationType: '移入公海池' | '跟进' | '分配' | '新建跟进' | '新建分配'; // 更新了可能的操作类型
-  createdAt?: Date;
-  updatedAt?: Date;
-
+  operationType: '移入公海池' | '跟进' | '分配' | '新建跟进' | '新建分配' | '认领'; // 更新了可能的操作类型
+  createdAt?: string;
+  updatedAt?: string;
   remark?: string;
 }
 
@@ -410,4 +419,24 @@ export interface ProjectProgressHistory {
   remark?: string;
   createdAt?: Date;
   updatedAt?: Date;
+}
+
+interface PublicCustomer {
+  _id: string;
+  name: string;
+  nature: string;
+  importance: string;
+  applicationField: string;
+  progress: string;
+  address: string;
+  productNeeds: string[];
+  enterPoolTime: string;
+  creatorId: string;
+  creatorName: string;
+  creatorType: string;
+  createdAt: string;
+}
+
+export interface PublicPoolResponse {
+  publicCustomers: PublicCustomer[];
 }

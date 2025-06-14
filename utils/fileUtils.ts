@@ -201,7 +201,7 @@ export const parseCustomerFile = async (file: File): Promise<{
           const contactPerson = row['联系人'] || '';
           const contactPhone = `${row['联系方式'] || ''}`;
           const address = row['公司地址'] || '';
-          const progressStr = row['客户进展'] || CustomerProgress.NORMAL;
+          const progressStr = row['客户进展'] || CustomerProgress.InitialContact;
           const annualDemandStr = row['年需求量(片)'] || row['年需求量'] || '0';
           const relatedSalesName = row['关联销售名称'] || '';
           const relatedAgentName = row['关联代理商名称'] || '';
@@ -250,7 +250,7 @@ export const parseCustomerFile = async (file: File): Promise<{
           }
           
           // 验证客户进展
-          let progress: CustomerProgress = CustomerProgress.NORMAL; // 默认值
+          let progress: CustomerProgress = CustomerProgress.InitialContact; // 默认值
           if (progressStr) {
             const validProgresses = Object.values(CustomerProgress)
               .filter(p => p !== CustomerProgress.PUBLIC_POOL); // 过滤掉不能直接设置的公海状态
@@ -273,8 +273,8 @@ export const parseCustomerFile = async (file: File): Promise<{
           // 解析产品需求 - 将逗号分隔的字符串转换为数组
           const productNeeds = productNeedsStr 
           ? productNeedsStr.toString().split(/[,，]/) // 使用正则表达式匹配中文或英文逗号
-            .map(p => p.trim())
-            .filter(p => p)
+            .map((p: string) => p.trim())
+            .filter((p: any) => p)
           : [];
           
           // 构建客户对象

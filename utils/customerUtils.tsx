@@ -2,7 +2,6 @@
  * 客户管理工具函数
  * 包含表格列配置和其他功能函数
  */
-import React from 'react';
 import { Space, Button, Tag, Popconfirm, Dropdown, Modal } from 'antd';
 import { 
   EyeOutlined,
@@ -16,9 +15,8 @@ import {
 import { 
   Customer,
   CustomerNature,
-  CustomerImportance, 
-  CustomerProgress
-} from '../shared/types';
+  CustomerImportance,
+  CustomerProgress} from '../shared/types';
 import ResponsiveTooltip from '../components/common/ResponsiveTooltip';
 
 // 获取表格列配置
@@ -148,6 +146,9 @@ export const getActionColumn = (
     fixed: 'right' as const,
     width: isMobile ? 60 : 200,
     render: (_: any, record: Customer) => {
+      if (record.progress === CustomerProgress.Disabled){
+        return <>其他人已有进展</>
+      }
       // 移动端使用下拉菜单
       if (isMobile) {
         const items = [];

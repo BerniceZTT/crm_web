@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { 
   Card, 
   Table, 
@@ -15,35 +15,28 @@ import {
   Tooltip,
   Empty,
   Spin,
-  Divider,
   Row,
   Col,
   Popover,
   Collapse
 } from 'antd';
 import { 
-  SearchOutlined, 
-  FilterOutlined, 
   InfoCircleOutlined, 
-  CheckCircleOutlined,
   EnvironmentOutlined,
   UserSwitchOutlined,
-  UserOutlined,
   TeamOutlined,
   ShopOutlined,
-  QuestionCircleOutlined,
-  ReloadOutlined,
-  AppstoreOutlined
-} from '@ant-design/icons';
+  QuestionCircleOutlined} from '@ant-design/icons';
 import { useAuth } from '../contexts/AuthContext';
 import { 
   CustomerNature,
   CustomerImportance,
-  CustomerProgress,
   UserRole,
   UserBrief,
   AgentBrief,
-  PublicPoolCustomer
+  PublicPoolCustomer,
+  AssignableUsers,
+  PublicPoolResponse
 } from '../shared/types';
 import { publicPoolPermissions } from '../shared/auth';
 import { api } from '../utils/api';
@@ -64,10 +57,17 @@ const PublicPoolManagement: React.FC = () => {
   const [assignModalVisible, setAssignModalVisible] = useState(false);
   const [currentCustomer, setCurrentCustomer] = useState<PublicPoolCustomer | null>(null);
   const [rulesVisible, setRulesVisible] = useState(false);
-  
-  const [selectedSalesId, setSelectedSalesId] = useState<string>(user?.role === UserRole.FACTORY_SALES? user?._id: (user?.role === UserRole.AGENT? user?.relatedSalesId : ''));
-  const [selectedAgentId, setSelectedAgentId] = useState<string>(user?.role === UserRole.AGENT? user?._id: '');
-  const isSuperAdmin = user?.role === UserRole.SUPER_ADMIN;
+  const [selectedSalesId, setSelectedSalesId] = useState<string>(
+    user?.role === UserRole.FACTORY_SALES 
+      ? user?._id ?? '' 
+      : user?.role === UserRole.AGENT 
+        ? user?.relatedSalesId ?? '' 
+        : ''
+  );
+  const [selectedAgentId, setSelectedAgentId] = useState<string>(
+    user?.role === UserRole.AGENT ? user?._id ?? '' : ''
+  );
+    const isSuperAdmin = user?.role === UserRole.SUPER_ADMIN;
   
   const canAssign = user ? publicPoolPermissions.canAssign(user.role as UserRole) : false;
   
@@ -88,12 +88,12 @@ const PublicPoolManagement: React.FC = () => {
     return params.toString();
   }, [keyword, filters]);
   
-  const { data, error, isLoading, mutate: refreshPublicPool } = useData(
+  const { data, error, isLoading, mutate: refreshPublicPool } = useData<PublicPoolResponse>(
     `/api/public-pool?${buildQueryParams()}`,
     { forceRefresh: true }
   );
   
-  const { data: assignableUsers, error: assignableError, isLoading: isAssignableLoading } = useData(
+  const { data: assignableUsers, isLoading: isAssignableLoading } = useData<AssignableUsers>(
     canAssign? '/api/public-pool/assignable-users' : null
   );
   

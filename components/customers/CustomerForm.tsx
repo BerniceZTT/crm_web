@@ -238,7 +238,6 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
               onClick={showNameValidator}
               style={{ minWidth: '100px' }}
             >
-              {validationButtonProps.icon}
               {validationButtonProps.text}
             </Button>
           </div>
@@ -323,7 +322,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
           name="progress"
           label="客户进展"
           rules={[{ required: true, message: '请选择客户进展' }]}
-          formatter={(value) => {
+          formatter={(value: any) => {
             if(value === CustomerProgress.PUBLIC_POOL){
               form.setFieldValue('progress', null);
             }
@@ -332,7 +331,7 @@ const CustomerForm: React.FC<CustomerFormProps> = ({
         >
           <Select placeholder="请选择客户进展">
             {Object.values(CustomerProgress)
-              .filter(progress => progress !== CustomerProgress.PUBLIC_POOL)
+              .filter(progress => progress == CustomerProgress.InitialContact)
               .map(progress => (
                 <Option key={progress} value={progress}>{progress}</Option>
               ))

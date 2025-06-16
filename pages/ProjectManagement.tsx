@@ -27,6 +27,7 @@ import { api } from '../utils/api';
 import { useResponsive } from '../hooks/useResponsive';
 import ProjectList from '../components/projects/ProjectList';
 import ProjectForm from '../components/projects/ProjectForm';
+import dayjs from 'dayjs';
 
 const { Title, Text } = Typography;
 
@@ -144,7 +145,7 @@ const ProjectManagement: React.FC = () => {
   // 修改：编辑项目时也生成新的key
   const handleEditProject = useCallback((project: Project) => {
     console.log('开始编辑项目:', project.projectName);
-    
+    project.startDate = dayjs(project.startDate)
     setCurrentProject(project);
     setProjectMode('edit');
     

@@ -13,7 +13,8 @@ const permissions: Record<UserRole, Record<string, string[]>> = {
     agents: ['create', 'read', 'update', 'delete', 'approve'],
     products: ['create', 'read', 'update', 'delete'],
     publicPool: ['read', 'assign'], 
-    dashboard: ['read']
+    dashboard: ['read'],
+    'system-configs':['read'],
   },
   [UserRole.FACTORY_SALES]: {
     customers: ['create', 'read', 'update', 'delete'],

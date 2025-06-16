@@ -17,13 +17,14 @@ import {
   message,
   List,
   Space,
-  Tooltip
+  Tooltip,
+  DatePicker
 } from 'antd';
 import {
-  UploadOutlined,
   DeleteOutlined,
   PlusOutlined,
-  DownloadOutlined
+  DownloadOutlined,
+  ClockCircleOutlined
 } from '@ant-design/icons';
 import {
   Project,
@@ -31,6 +32,8 @@ import {
   Product,
   FileAttachment
 } from '../../shared/types';
+import dayjs from 'dayjs';
+import 'dayjs/locale/zh-cn'; 
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -71,7 +74,8 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
     form.setFieldsValue({
       projectProgress: ProjectProgress.SAMPLE_EVALUATION,
       smallBatchAttachments: [],
-      massProductionAttachments: []
+      massProductionAttachments: [],
+      startDate: dayjs() // 新增：默认设置为当前日期
     });
 
     console.log('ProjectForm内部状态重置完成');
@@ -85,7 +89,10 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
 
       // 如果有customerId，预填充客户信息
       if (customerId && mode === 'create') {
-        form.setFieldsValue({ customerId });
+        form.setFieldsValue({ 
+          customerId,
+          startDate: dayjs() // 新增：新建时默认设置为当前日期
+        });
       }
     } else {
       // 编辑模式时，设置项目数据
@@ -94,7 +101,7 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
       setSmallBatchFiles(currentProject.smallBatchAttachments || []);
       setMassProductionFiles(currentProject.massProductionAttachments || []);
 
-      // 设置表单值
+      // 设置表单值，包括项目开始时间
       form.setFieldsValue({
         ...currentProject,
         smallBatchAttachments: currentProject.smallBatchAttachments || [],
@@ -496,6 +503,28 @@ const ProjectForm: React.FC<ProjectFormProps> = ({
                   ))
                 }
               </Select>
+            </Form.Item>
+          </Col>
+          <Col span={8}>
+          <Form.Item
+              name="startDate"
+              label={
+                <Space>
+                  <ClockCircleOutlined />
+                  项目开始时间
+                </Space>
+              }
+              rules={[{ required: true, message: '请选择项目开始时间' }]}
+            >
+              <DatePicker
+                showTime={{
+                  format: 'HH:mm:ss',
+                  defaultValue: dayjs.isDayjs(dayjs()) ? dayjs().startOf('hour') : dayjs(new Date()).startOf('hour')
+                }}
+                placeholder="请选择项目开始时间"
+                style={{ width: '100%' }}
+                format="YYYY-MM-DD HH:mm:ss"
+              />
             </Form.Item>
           </Col>
         </Row>

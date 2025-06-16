@@ -16,7 +16,8 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
-  BellOutlined
+  BellOutlined,
+  SettingOutlined
 } from '@ant-design/icons';
 import { Link, Outlet, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
@@ -117,6 +118,12 @@ const MainLayout: React.FC = () => {
       icon: <GlobalOutlined />,
       label: <Link to="/public-pool">客户公海</Link>,
       access: hasPermission('publicPool', 'read')
+    },
+    {
+      key: '/system-configs',
+      icon: <SettingOutlined />,
+      label: <Link to="/system-configs">系统配置</Link>,
+      access: user?.role === UserRole.SUPER_ADMIN
     }
   ].filter(item => item.access);
   

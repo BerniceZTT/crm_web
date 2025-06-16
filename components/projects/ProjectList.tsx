@@ -167,6 +167,28 @@ const ProjectList: React.FC<ProjectListProps> = ({
       width: isMobile ? 80 : 120,
     },
     {
+      title: '批次号',
+      dataIndex: 'batchNumber',
+      key: 'batchNumber',
+      ellipsis: true,
+      width: isMobile ? 80 : 120,
+    },
+    {
+      title: '开始时间',
+      dataIndex: 'startDate',
+      key: 'startDate',
+      width: isMobile ? 100 : 120,
+      render: (startDate: string | Date) => {
+        if (!startDate) return '-';
+        const date = new Date(startDate);
+        return (
+          <Tooltip title={date.toLocaleString()}>
+            <Text>{date.toLocaleString()}</Text>
+          </Tooltip>
+        );
+      },
+    },
+    {
       title: '项目进展',
       dataIndex: 'projectProgress',
       key: 'projectProgress',
@@ -247,7 +269,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
 
   // 移动端显示更简洁的列
   const mobileColumns = columns.filter(col => 
-    ['projectName', 'projectProgress', 'action'].includes(col.key as string)
+    ['projectName', 'startDate', 'projectProgress', 'action'].includes(col.key as string)
   );
 
   return (

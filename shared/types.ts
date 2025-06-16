@@ -3,6 +3,8 @@
  * 包含整个应用程序中使用的数据类型和枚举
  */
 
+import dayjs from "dayjs";
+
 // 用户角色枚举
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN', // 超级管理员
@@ -362,6 +364,7 @@ export interface Project {
   productName: string;
   batchNumber: string;
   projectProgress: ProjectProgress;
+  startDate: Date | dayjs.Dayjs; // 项目开始时间，必填字段
   
   // 小批量相关字段 - 改为数组支持多文件
   smallBatchPrice?: number;
@@ -439,4 +442,54 @@ interface PublicCustomer {
 
 export interface PublicPoolResponse {
   publicCustomers: PublicCustomer[];
+}
+
+// 系统配置相关类型 - 新增
+export interface SystemConfig {
+  id?: string;
+  configType: ConfigType;
+  configKey: string;
+  configValue: any;
+  description: string;
+  isEnabled: boolean;
+  creatorId: string;
+  creatorName: string;
+  updaterId?: string;
+  updaterName?: string;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// 配置类型枚举 - 简化版本，移除系统通知和业务规则
+export enum ConfigType {
+  CUSTOMER_AUTO_TRANSFER = 'customer_auto_transfer' // 只保留客户自动转移配置
+}
+
+// 客户自动转移配置值类型 - 简化版本，移除进展阶段字段
+export interface CustomerAutoTransferConfig {
+  daysWithoutProgress: number;     // 无进展天数
+  targetSalesId: string;           // 目标销售ID
+  targetSalesName: string;         // 目标销售名称
+}
+
+export interface ConfigValueItem {
+  Key: 'daysWithoutProgress' | 'targetSalesId' | 'targetSalesName';
+  Value: any;
+}
+
+
+// 配置创建请求类型 - 新增
+export interface CreateConfigRequest {
+  configType: ConfigType;
+  configKey: string;
+  configValue: any;
+  description: string;
+  isEnabled?: boolean;
+}
+
+// 配置更新请求类型 - 新增
+export interface UpdateConfigRequest {
+  configValue?: any;
+  description?: string;
+  isEnabled?: boolean;
 }

@@ -32,7 +32,8 @@ import {
   PlusOutlined,
   DeleteOutlined,
   FileTextOutlined,
-  ClockCircleOutlined
+  ClockCircleOutlined,
+  CalendarOutlined
 } from '@ant-design/icons';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Project, ProjectProgress, UserRole, ProjectFollowUpRecord, ProjectProgressHistory } from '../shared/types';
@@ -97,14 +98,14 @@ const ProjectDetail: React.FC = () => {
           setError('没有权限查看此项目');
         } else if (error.response?.status >= 500) {
           setError('服务器错误，请稍后重试');
-          // 服务端错误上报
-          if (process.env.NODE_ENV === 'development' && typeof aipaDevRuntime !== 'undefined') {
-            aipaDevRuntime.reportApiError({
-              url: `/api/projects/${projectId}`,
-              method: 'GET',
-              body: null,
-            }, error.message || '获取项目详情失败');
-          }
+          // // 服务端错误上报
+          // if (process.env.NODE_ENV === 'development' && typeof aipaDevRuntime !== 'undefined') {
+          //   aipaDevRuntime.reportApiError({
+          //     url: `/api/projects/${projectId}`,
+          //     method: 'GET',
+          //     body: null,
+          //   }, error.message || '获取项目详情失败');
+          // }
         } else {
           setError('网络错误，请检查网络连接');
         }
@@ -444,6 +445,20 @@ const ProjectDetail: React.FC = () => {
               <Descriptions.Item label="客户名称">{project.customerName}</Descriptions.Item>
               <Descriptions.Item label="产品型号">{project.productName}</Descriptions.Item>
               <Descriptions.Item label="产品批次号">{project.batchNumber}</Descriptions.Item>
+              <Descriptions.Item 
+                label={
+                  <Space>
+                    <CalendarOutlined />
+                    项目开始时间
+                  </Space>
+                }
+              >
+                <Space>
+                  <Tag color="blue" icon={<CalendarOutlined />}>
+                    {project.startDate ? new Date(project.startDate).toLocaleString() : '-'}
+                  </Tag>
+                </Space>
+              </Descriptions.Item>
               <Descriptions.Item label="项目进展">
                 <Tag color={getProgressColor(project.projectProgress)}>
                   {project.projectProgress}
@@ -738,7 +753,7 @@ const ProjectDetail: React.FC = () => {
       <Card>
         <Tabs 
           items={tabItems} 
-          size={isMobile ? 'small' : 'default'}
+          size={isMobile ? 'small' : undefined}
           tabPosition={isMobile ? 'top' : 'top'}
         />
       </Card>

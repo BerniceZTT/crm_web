@@ -12,6 +12,7 @@ import ProjectManagement from './pages/ProjectManagement';
 import ProjectDetail from './pages/ProjectDetail';
 import ProductManagement from './pages/ProductManagement';
 import UserManagement from './pages/UserManagement';
+import SystemConfigManagement from './pages/SystemConfigManagement';
 import AgentManagement from './pages/AgentManagement';
 import PublicPoolManagement from './pages/PublicPoolManagement';
 import NotFound from './pages/NotFound';
@@ -121,6 +122,16 @@ const AppRoutes = () => {
         
         <Route path="agents" element={<AgentManagement />} />
         <Route path="public-pool" element={<PublicPoolManagement />} />
+
+        {/* 系统配置管理页面 - 仅超级管理员可访问 */}
+        <Route 
+          path="system-configs" 
+          element={
+            <RoleBasedRoute allowedRoles={[UserRole.SUPER_ADMIN]}>
+              <SystemConfigManagement />
+            </RoleBasedRoute>
+          } 
+        />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

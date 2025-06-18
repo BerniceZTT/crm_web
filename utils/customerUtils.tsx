@@ -98,6 +98,13 @@ export const getBaseColumns = (
       render: (text: string) => text || <span style={{ color: '#999' }}>未关联</span>
     },
     {
+      title: '状态',
+      dataIndex: 'progress',
+      key: 'progress',
+      width: 150,
+      responsive: ['lg']
+    }, 
+    {
       title: '创建人',
       dataIndex: 'ownerName',
       key: 'ownerName',

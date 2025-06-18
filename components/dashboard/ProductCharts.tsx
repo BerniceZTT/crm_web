@@ -147,6 +147,7 @@ const ProductCharts: React.FC<ProductChartsProps> = ({
                       textAnchor="end"
                       height={80}
                       interval={0}
+                      tickFormatter={(value) => value.length > 8 ? `${value.substring(0, 8)}...` : value}
                     />
                     <YAxis 
                       label={{ value: '客户数量', angle: -90, position: 'insideLeft' }}
@@ -190,6 +191,7 @@ const ProductCharts: React.FC<ProductChartsProps> = ({
                       textAnchor="end"
                       height={80}
                       interval={0}
+                      tickFormatter={(value) => value.length > 8 ? `${value.substring(0, 8)}...` : value}
                     />
                     <YAxis 
                       label={{ value: '项目数量', angle: -90, position: 'insideLeft' }}

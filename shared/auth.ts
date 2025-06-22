@@ -15,6 +15,7 @@ const permissions: Record<UserRole, Record<string, string[]>> = {
     publicPool: ['read', 'assign'], 
     dashboard: ['read'],
     'system-configs':['read'],
+    projects:['read', 'create', 'update', 'delete']
   },
   [UserRole.FACTORY_SALES]: {
     customers: ['create', 'read', 'update', 'delete'],
@@ -22,7 +23,8 @@ const permissions: Record<UserRole, Record<string, string[]>> = {
     users: ['read'], 
     products: ['read'], 
     publicPool: ['read', 'assign'], // 增加 assign 权限
-    dashboard: []
+    dashboard: [],
+    projects:['read', 'create', 'update']
   },
   [UserRole.AGENT]: {
     customers: ['create', 'read', 'update', 'delete'],
@@ -68,3 +70,13 @@ export function canAssignPublicPoolCustomer(role: UserRole): boolean {
 export const publicPoolPermissions = {
   canAssign: canAssignPublicPoolCustomer
 };
+
+/**
+ * 检查用户是否可以访问项目管理
+ * admin、销售和代理商都可以访问项目管理
+ */
+export function canAccessProjectManagement(role: UserRole): boolean {
+  return role === UserRole.SUPER_ADMIN || 
+         role === UserRole.FACTORY_SALES || 
+         role === UserRole.AGENT;
+}

@@ -23,6 +23,7 @@ export enum UserStatus {
 // 用户类型
 export interface User {
   _id?: string;
+  id?: string;
   companyName?: string;
   username: string;
   password?: string;

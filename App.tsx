@@ -12,7 +12,6 @@ import ProjectManagement from './pages/ProjectManagement';
 import ProjectDetail from './pages/ProjectDetail';
 import ProductManagement from './pages/ProductManagement';
 import UserManagement from './pages/UserManagement';
-import SystemConfigManagement from './pages/SystemConfigManagement';
 import AgentManagement from './pages/AgentManagement';
 import PublicPoolManagement from './pages/PublicPoolManagement';
 import NotFound from './pages/NotFound';
@@ -22,6 +21,7 @@ import 'react-toastify/dist/ReactToastify.css';
 import { UserRole } from './shared/types';
 import RoleBasedRoute from './components/RoleBasedRoute';
 import './styles/global.css';
+import SystemConfigManagement from './pages/SystemConfigManagement';
 
 // 私有路由守卫
 const PrivateRoute = ({ children }: { children: React.ReactNode }) => {
@@ -69,6 +69,7 @@ const AppRoutes = () => {
     if (user.role === UserRole.INVENTORY_MANAGER) {
       return <Navigate to="/products" replace />;
     }
+    
     // 超级管理员或其他角色进入看板
     return <Dashboard />;
   };
@@ -103,10 +104,31 @@ const AppRoutes = () => {
         <Route path="customers" element={<CustomerManagement />} />
         <Route path="customers/:id" element={<CustomerDetail />} />
         
-        {/* 项目管理相关路由 */}
-        <Route path="projects" element={<ProjectManagement />} />
-        <Route path="projects/customer/:customerId" element={<ProjectManagement />} />
-        <Route path="projects/detail/:projectId" element={<ProjectDetail />} />
+        {/* 项目管理相关路由 - 添加角色权限保护 */}
+        <Route 
+          path="projects" 
+          element={
+            <RoleBasedRoute allowedRoles={[UserRole.SUPER_ADMIN, UserRole.FACTORY_SALES, UserRole.AGENT]}>
+              <ProjectManagement />
+            </RoleBasedRoute>
+          } 
+        />
+        <Route 
+          path="projects/customer/:customerId" 
+          element={
+            <RoleBasedRoute allowedRoles={[UserRole.SUPER_ADMIN, UserRole.FACTORY_SALES, UserRole.AGENT]}>
+              <ProjectManagement />
+            </RoleBasedRoute>
+          } 
+        />
+        <Route 
+          path="projects/detail/:projectId" 
+          element={
+            <RoleBasedRoute allowedRoles={[UserRole.SUPER_ADMIN, UserRole.FACTORY_SALES, UserRole.AGENT]}>
+              <ProjectDetail />
+            </RoleBasedRoute>
+          } 
+        />
         
         <Route path="products" element={<ProductManagement />} />
         
@@ -122,7 +144,7 @@ const AppRoutes = () => {
         
         <Route path="agents" element={<AgentManagement />} />
         <Route path="public-pool" element={<PublicPoolManagement />} />
-
+        
         {/* 系统配置管理页面 - 仅超级管理员可访问 */}
         <Route 
           path="system-configs" 
@@ -132,6 +154,7 @@ const AppRoutes = () => {
             </RoleBasedRoute>
           } 
         />
+        
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

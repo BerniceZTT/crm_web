@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Dropdown, Button, Avatar, Typography, Drawer, Badge } from 'antd';
+import { Layout, Menu, Dropdown, Button, Avatar, Typography, Drawer } from 'antd';
 import { 
   DashboardOutlined, 
   TeamOutlined, 
@@ -16,12 +16,13 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   LogoutOutlined,
-  BellOutlined,
-  SettingOutlined
+  SettingOutlined,
+  ProjectOutlined
 } from '@ant-design/icons';
-import { Link, Outlet, useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole } from '../shared/types';
+import { canAccessProjectManagement } from '../shared/auth';
 import { motion } from 'framer-motion';
 
 const { Header, Sider, Content } = Layout;
@@ -81,7 +82,7 @@ const MainLayout: React.FC = () => {
     navigate('/login');
   };
   
-  // 菜单项配置
+  // 菜单项配置 - 优化项目管理权限检查
   const menuItems = [
     {
       key: '/',
@@ -94,6 +95,12 @@ const MainLayout: React.FC = () => {
       icon: <TeamOutlined />,
       label: <Link to="/customers">客户管理</Link>,
       access: hasPermission('customers', 'read')
+    },
+    {
+      key: '/projects',
+      icon: <ProjectOutlined />,
+      label: <Link to="/projects">项目管理</Link>,
+      access: user ? canAccessProjectManagement(user.role) : false // 修复：使用新的权限检查函数
     },
     {
       key: '/products',
@@ -127,12 +134,19 @@ const MainLayout: React.FC = () => {
     }
   ].filter(item => item.access);
   
-  // 根据当前路径找到选中的菜单项
+  // 根据当前路径找到选中的菜单项 - 更新项目路径匹配逻辑
   const selectedKey = (() => {
-    if (location.pathname.startsWith('/projects')) {
+    // 项目详情页面匹配到项目管理菜单
+    if (location.pathname.startsWith('/projects/detail/')) {
+      return '/projects';
+    }
+    
+    // 特定客户的项目管理页面仍然匹配到客户管理
+    if (location.pathname.includes('/projects/customer/')) {
       return '/customers';
     }
     
+    // 其他路径的匹配逻辑
     const matchedItem = menuItems.find(item => 
       location.pathname === item.key || 
       (item.key !== '/' && location.pathname.startsWith(`${item.key}/`))
@@ -158,7 +172,10 @@ const MainLayout: React.FC = () => {
   
   // 获取标题内容
   const getTitleContent = () => {
-    return '乾芯CRM系统';
+    if (user?.role === UserRole.INVENTORY_MANAGER) {
+      return '库存管理系统';
+    }
+    return '企业级CRM系统';
   };
   
   return (
@@ -281,7 +298,7 @@ const MainLayout: React.FC = () => {
                   size={isMobile ? 'small' : 'default'}
                 />
                 {/* 改进用户信息显示 */}
-                <div className={`flex flex-col`}>
+                <div className={`flex flex-col ${isMobile ? 'hidden' : ''}`}>
                   <span className="font-medium text-gray-800 leading-tight">
                     {user?.username || user?.companyName || 'User'}
                   </span>

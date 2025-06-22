@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { User, UserRole } from '../shared/types';
+import { User } from '../shared/types';
 import { api } from '../utils/api';
 import { hasPermission } from '../shared/auth';
 

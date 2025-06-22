@@ -1,6 +1,6 @@
 /**
  * 项目列表组件
- * 显示客户的所有项目，去掉附件展示
+ * 显示客户的所有项目，根据显示模式控制关联信息列的显示
  */
 import React, { useState } from 'react';
 import { 
@@ -15,10 +15,14 @@ import {
   Tooltip
 } from 'antd';
 import { 
-  PlusOutlined, 
   EditOutlined, 
   DeleteOutlined,
-  EyeOutlined
+  EyeOutlined,
+  ClockCircleOutlined,
+  TeamOutlined,
+  UserOutlined,
+  ShopOutlined,
+  PlusOutlined
 } from '@ant-design/icons';
 import { Project, ProjectProgress, UserRole } from '../../shared/types';
 import { useAuth } from '../../contexts/AuthContext';
@@ -35,15 +39,18 @@ interface ProjectListProps {
   onRefresh: () => void;
   onEdit: (project: Project) => void;
   onAdd: () => void;
+  showRelatedColumns?: boolean; // 控制是否显示关联信息列
+  showCreateButton?: boolean; // 🆕 控制是否显示新建项目按钮
 }
 
 const ProjectList: React.FC<ProjectListProps> = ({
-  customerId,
   projects,
   loading,
   onRefresh,
   onEdit,
-  onAdd
+  onAdd,
+  showRelatedColumns = true, // 默认显示关联信息列
+  showCreateButton = false // 🆕 默认不显示新建按钮
 }) => {
   const { user } = useAuth();
   const { isMobile } = useResponsive();
@@ -51,6 +58,31 @@ const ProjectList: React.FC<ProjectListProps> = ({
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+
+  // 格式化时间显示（支持时分秒）
+  const formatDateTime = (dateTime: string | Date, showTime: boolean = false) => {
+    if (!dateTime) return '-';
+    const date = new Date(dateTime);
+    
+    if (showTime) {
+      // 移动端显示简化版，桌面端显示完整版
+      return date.toLocaleString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        ...(isMobile ? {} : { second: '2-digit' }),
+        hour12: false
+      });
+    } else {
+      return date.toLocaleDateString('zh-CN', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    }
+  };
 
   // 获取进展状态的颜色
   const getProgressColor = (progress: ProjectProgress) => {
@@ -99,6 +131,14 @@ const ProjectList: React.FC<ProjectListProps> = ({
     return user.role === UserRole.SUPER_ADMIN;
   };
 
+  // 🔧 检查是否可以新建项目
+  const canCreateProject = () => {
+    if (!user) return false;
+    return user.role === UserRole.SUPER_ADMIN || 
+           user.role === UserRole.FACTORY_SALES || 
+           user.role === UserRole.AGENT;
+  };
+
   // 处理查看详情 - 增加错误处理和调试信息
   const handleViewDetail = (project: Project) => {
     console.log('查看项目详情，项目ID:', project._id);
@@ -143,8 +183,8 @@ const ProjectList: React.FC<ProjectListProps> = ({
     }
   };
 
-  // 表格列定义 - 移除附件列
-  const columns = [
+  // 表格列定义 - 根据 showRelatedColumns 控制关联信息列的显示
+  const baseColumns = [
     {
       title: '项目名称',
       dataIndex: 'projectName',
@@ -167,23 +207,35 @@ const ProjectList: React.FC<ProjectListProps> = ({
       width: isMobile ? 80 : 120,
     },
     {
-      title: '批次号',
-      dataIndex: 'batchNumber',
-      key: 'batchNumber',
-      ellipsis: true,
-      width: isMobile ? 80 : 120,
-    },
-    {
-      title: '开始时间',
+      title: (
+        <Space>
+          <ClockCircleOutlined />
+          开始时间
+        </Space>
+      ),
       dataIndex: 'startDate',
       key: 'startDate',
-      width: isMobile ? 100 : 120,
+      width: isMobile ? 110 : 140,
       render: (startDate: string | Date) => {
         if (!startDate) return '-';
         const date = new Date(startDate);
+        const shortTime = formatDateTime(startDate, false);
+        const fullTime = formatDateTime(startDate, true);
+        
         return (
-          <Tooltip title={date.toLocaleString()}>
-            <Text>{date.toLocaleString()}</Text>
+          <Tooltip title={`完整时间: ${fullTime}`}>
+            <Space direction="vertical" size={0}>
+              <Text style={{ fontSize: '12px' }}>{shortTime}</Text>
+              {!isMobile && (
+                <Text type="secondary" style={{ fontSize: '10px' }}>
+                  {date.toLocaleTimeString('zh-CN', { 
+                    hour: '2-digit', 
+                    minute: '2-digit',
+                    hour12: false 
+                  })}
+                </Text>
+              )}
+            </Space>
           </Tooltip>
         );
       },
@@ -219,6 +271,72 @@ const ProjectList: React.FC<ProjectListProps> = ({
         </Text>
       ),
     },
+  ];
+
+  // 关联信息列 - 只在需要时显示
+  const relatedColumns = showRelatedColumns ? [
+    // 关联客户名称列
+    {
+      title: (
+        <Space>
+          <TeamOutlined />
+          关联客户
+        </Space>
+      ),
+      dataIndex: 'customerName',
+      key: 'customerName',
+      width: isMobile ? 100 : 120,
+      ellipsis: true,
+      render: (customerName: string) => (
+        <Tooltip title={customerName}>
+          <Text>{customerName || '-'}</Text>
+        </Tooltip>
+      ),
+    },
+    // 关联销售列
+    {
+      title: (
+        <Space>
+          <UserOutlined />
+          关联销售
+        </Space>
+      ),
+      dataIndex: 'relatedSalesName',
+      key: 'relatedSalesName',
+      width: isMobile ? 90 : 110,
+      ellipsis: true,
+      render: (salesName: string) => (
+        <Tooltip title={salesName || '无关联销售'}>
+          <Text type={salesName ? 'default' : 'secondary'}>
+            {salesName || '-'}
+          </Text>
+        </Tooltip>
+      ),
+    },
+    // 关联代理商列
+    {
+      title: (
+        <Space>
+          <ShopOutlined />
+          关联代理商
+        </Space>
+      ),
+      dataIndex: 'relatedAgentName',
+      key: 'relatedAgentName',
+      width: isMobile ? 100 : 120,
+      ellipsis: true,
+      render: (agentName: string) => (
+        <Tooltip title={agentName || '无关联代理商'}>
+          <Text type={agentName ? 'default' : 'secondary'}>
+            {agentName || '-'}
+          </Text>
+        </Tooltip>
+      ),
+    },
+  ] : [];
+
+  // 其他固定列
+  const endColumns = [
     {
       title: '创建人',
       dataIndex: 'creatorName',
@@ -230,7 +348,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
       title: '操作',
       key: 'action',
       width: isMobile ? 100 : 140,
-      render: (_: any, record: Project) => (
+      render: (_, record: Project) => (
         <Space size="small">
           <Tooltip title="查看详情">
             <Button
@@ -267,10 +385,18 @@ const ProjectList: React.FC<ProjectListProps> = ({
     },
   ];
 
-  // 移动端显示更简洁的列
-  const mobileColumns = columns.filter(col => 
-    ['projectName', 'startDate', 'projectProgress', 'action'].includes(col.key as string)
-  );
+  // 组合完整的列配置
+  const columns = [...baseColumns, ...relatedColumns, ...endColumns];
+
+  // 移动端显示更简洁的列 - 根据是否显示关联信息调整
+  const mobileColumns = columns.filter(col => {
+    const key = col.key as string;
+    if (showRelatedColumns) {
+      return ['projectName', 'startDate', 'projectProgress', 'customerName', 'action'].includes(key);
+    } else {
+      return ['projectName', 'startDate', 'projectProgress', 'action'].includes(key);
+    }
+  });
 
   return (
     <>
@@ -280,15 +406,23 @@ const ProjectList: React.FC<ProjectListProps> = ({
           <Text type="secondary" className="ml-2">
             共 {projects.length} 个项目
           </Text>
+          {/* 提示用户当前显示模式 */}
+          {!showRelatedColumns && (
+            <Text type="secondary" className="ml-2 text-xs">
+              (隐藏关联信息列)
+            </Text>
+          )}
         </div>
-        {canEdit() && (
+        
+        {/* 🆕 恢复新建项目按钮 - 根据传入的 showCreateButton 控制显示 */}
+        {showCreateButton && canCreateProject() && (
           <Button 
             type="primary" 
             icon={<PlusOutlined />}
             onClick={onAdd}
             size={isMobile ? "middle" : "middle"}
           >
-            新建项目
+            {isMobile ? '新建' : '新建项目'}
           </Button>
         )}
       </div>
@@ -305,7 +439,11 @@ const ProjectList: React.FC<ProjectListProps> = ({
           showTotal: (total, range) => 
             `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
         }}
-        scroll={{ x: isMobile ? 400 : 800 }}
+        scroll={{ 
+          x: isMobile 
+            ? (showRelatedColumns ? 800 : 600) 
+            : (showRelatedColumns ? 1400 : 1000) 
+        }}
         size={isMobile ? "small" : "middle"}
         locale={{
           emptyText: (
@@ -317,7 +455,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
         }}
       />
 
-      {/* 删除确认对话框 */}
       <Modal
         title="确认删除"
         open={deleteModalVisible}

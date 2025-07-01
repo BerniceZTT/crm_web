@@ -3,10 +3,10 @@
  * 支持查看特定客户的项目或所有项目，增强独立项目管理功能
  */
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { 
-  Card, 
-  Button, 
-  Modal, 
+import {
+  Card,
+  Button,
+  Modal,
   message,
   Form,
   Typography,
@@ -15,15 +15,10 @@ import {
   Spin
 } from 'antd';
 import { 
-  ArrowLeftOutlined, 
-  ProjectOutlined} from '@ant-design/icons';
+  ArrowLeftOutlined,
+  ProjectOutlined
+} from '@ant-design/icons';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { 
-  Project, 
-  Product, 
-  Customer,
-  UserRole
-} from '../shared/types';
 import { useAuth } from '../contexts/AuthContext';
 import { useData } from '../utils/dataFetcher';
 import { api } from '../utils/api';
@@ -47,7 +42,13 @@ const ProjectManagement: React.FC = () => {
   const [currentProject, setCurrentProject] = useState<Partial<Project> | null>(null);
   const [projectMode, setProjectMode] = useState<'create' | 'edit'>('create');
   const [modalKey, setModalKey] = useState<string>('');
-  
+
+  // 🆕 添加分页状态管理 - 🔧 修复：确保初始状态与服务端一致
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: isMobile ? 5 : 10
+  });
+
   // 🔧 关键修复：使用ref存储上次用户信息，避免频繁比较
   const lastUserRef = useRef<{ id?: string; role?: string } | null>(null);
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -55,114 +56,47 @@ const ProjectManagement: React.FC = () => {
   // 🔧 从路由状态获取额外信息
   const routeState = location.state as { customerName?: string; fromCustomerDetail?: boolean } | null;
 
-  // 性能优化：使用 useMemo 缓存计算结果
-  const apiUrls = useMemo(() => ({
-    customer: customerId ? `/api/customers/${customerId}` : null,
-    products: '/api/products',
-    projects: customerId 
-      ? `/api/projects/customer/${customerId}` 
-      : '/api/projects'
-  }), [customerId]);
+  // 性能优化：使用 useMemo 缓存计算结果 - 🆕 添加分页参数
+  const apiUrls = useMemo(() => {
+    const baseUrl = customerId
+      ? `/api/projects/customer/${customerId}`
+      : '/api/projects';
 
-  // 🔧 稳定的用户ID获取
+    // 🆕 只有在非客户项目页面时才添加分页参数
+    if (!customerId) {
+      const params = new URLSearchParams({
+        page: pagination.page.toString(),
+        limit: pagination.limit.toString()
+      });
+      return {
+        customer: customerId ? `/api/customers/${customerId}` : null,
+        products: '/api/products',
+        projects: `${baseUrl}?${params.toString()}`
+      };
+    }
+
+    return {
+      customer: customerId ? `/api/customers/${customerId}` : null,
+      products: '/api/products',
+      projects: baseUrl
+    };
+  }, [customerId, pagination.page, pagination.limit]);
+
+  // 🔧 修复：添加完整的数据获取逻辑
+  const { data: customer, error: customerError, isLoading: customerLoading } = useData(apiUrls.customer);
+  const { data: productsData, error: productsError, isLoading: productsLoading } = useData(apiUrls.products);
+  const { data: projectsData, error: projectsError, isLoading: projectsLoading, mutate: mutateProjects } = useData(apiUrls.projects);
+
+  // 🔧 修复：安全地提取数据
+  const products = productsData?.products || [];
+  const projects = projectsData?.projects || [];
+  // 🆕 提取服务端返回的分页信息
+  const serverPagination = projectsData?.pagination || null;
+
+  // 性能优化：使用 useMemo 缓存稳定引用的用户ID
   const userId = useMemo(() => {
     return user?._id || user?.id || (user as any)?.userId;
   }, [user?._id, user?.id, (user as any)?.userId]);
-
-  // 🔧 优化的数据获取 - 确保userId引用稳定
-  const { 
-    data: customerData, 
-    isLoading: customerLoading,
-    error: customerError
-  } = useData<{ customer: Customer }>(apiUrls.customer, {
-    userId
-  });
-  
-  const { 
-    data: productsData,
-    isLoading: productsLoading 
-  } = useData<{ products: Product[] }>(apiUrls.products, {
-    userId 
-  });
-  
-  const {
-    data: projectsData,
-    isLoading: projectsLoading,
-    error: projectsError,
-    mutate: mutateProjects
-  } = useData<{ projects: Project[] }>(apiUrls.projects, {
-    userId,
-    forceRefresh: true 
-  });
-
-  // 🔧 关键修复：正确解构API响应数据
-  const customer = customerData?.customer;
-  const products = productsData?.products || [];
-  const projects = projectsData?.projects || [];
-
-  // 🔧 检查用户是否可以新建项目
-  const canCreateProject = useMemo(() => {
-    if (!user) return false;
-    return user.role === UserRole.SUPER_ADMIN || 
-           user.role === UserRole.FACTORY_SALES || 
-           user.role === UserRole.AGENT;
-  }, [user?.role]);
-
-  // 🆕 判断是否显示新建项目按钮：只有从客户详情页进入时才显示
-  const shouldShowCreateButton = useMemo(() => {
-    return !!customerId && canCreateProject;
-  }, [customerId, canCreateProject]);
-
-  // 🔧 优化用户变化监听 - 防止无限循环
-  useEffect(() => {
-    if (!user) {
-      lastUserRef.current = null;
-      return;
-    }
-
-    const currentUserInfo = {
-      id: user._id || user.id || (user as any)?.userId,
-      role: user.role
-    };
-
-    const lastUserInfo = lastUserRef.current;
-
-    // 只在用户ID或角色真正发生变化时才处理
-    if (!lastUserInfo || 
-        lastUserInfo.id !== currentUserInfo.id || 
-        lastUserInfo.role !== currentUserInfo.role) {
-      
-      console.log(`[ProjectManagement] 用户信息更新:`, {
-        previous: lastUserInfo,
-        current: currentUserInfo,
-        username: user.username || user.companyName
-      });
-      
-      // 清除之前的定时器
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
-      
-      // 🔧 使用防抖机制，避免频繁刷新
-      refreshTimeoutRef.current = setTimeout(() => {
-        console.log('[ProjectManagement] 执行延迟数据刷新');
-        if (mutateProjects) {
-          mutateProjects(true);
-        }
-      }, 300); // 300ms防抖
-      
-      lastUserRef.current = currentUserInfo;
-    }
-  }, [user?._id, user?.id, (user as any)?.userId, user?.role, user?.username, user?.companyName]);
-
-  // 🔧 清理函数
-  useEffect(() => {
-    return () => {
-      if (refreshTimeoutRef.current) {
-        clearTimeout(refreshTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // 性能优化：使用 useMemo 缓存复杂计算 - 更新页面标题逻辑
   const pageTitle = useMemo(() => {
@@ -178,20 +112,20 @@ const ProjectManagement: React.FC = () => {
 
   const breadcrumbItems = useMemo(() => {
     const items = [];
-    
+
     if (customerId) {
       const customerName = customer?.name || routeState?.customerName;
-      
+
       items.push({
         title: <a onClick={() => navigate('/customers')}>客户管理</a>
       });
-      
+
       if (customerName) {
         items.push({
           title: <a onClick={() => navigate(`/customers/${customerId}`)}>{customerName}</a>
         });
       }
-      
+
       items.push({
         title: '项目管理'
       });
@@ -200,13 +134,35 @@ const ProjectManagement: React.FC = () => {
         title: '项目管理'
       });
     }
-    
+
     return items;
   }, [customerId, customer?.name, routeState?.customerName, navigate]);
 
   const shouldShowRelatedColumns = useMemo(() => {
     return !customerId;
   }, [customerId]);
+
+  // 🔧 修复：添加是否显示创建按钮的逻辑
+  const shouldShowCreateButton = useMemo(() => {
+    return !!customerId;
+  }, [customerId]);
+
+  // 🆕 分页处理函数 - 🔧 修复：确保状态同步
+  const handlePageChange = useCallback((page: number, pageSize?: number) => {
+    setPagination(prev => ({
+      page: page,
+      limit: pageSize || prev.limit
+    }));
+  }, []);
+
+  // 🆕 页面大小变化处理函数 - 🔧 修复：确保状态同步
+  const handleShowSizeChange = useCallback((current: number, size: number) => {
+    // 🔧 确保分页状态立即更新，避免不一致
+    setPagination({
+      page: 1, // 重置到第一页
+      limit: size
+    });
+  }, []);
 
   // 性能优化：使用 useCallback 避免函数重复创建
   const handleGoBack = useCallback(() => {
@@ -217,34 +173,63 @@ const ProjectManagement: React.FC = () => {
     }
   }, [customerId, navigate]);
 
-  const handleAddProject = useCallback(() => {    
+  const handleAddProject = useCallback(() => {
     setCurrentProject(null);
     setProjectMode('create');
     setModalKey(`create_${Date.now()}`);
-    
+
     projectForm.resetFields();
-    
+
     if (customerId) {
       projectForm.setFieldsValue({ customerId });
     }
-    
+
     setProjectModalVisible(true);
-    
-    console.log('新建项目弹窗已打开，状态已重置');
   }, [customerId, projectForm]);
 
-  const handleEditProject = useCallback((project: Project) => {
-    console.log('开始编辑项目:', project.projectName);
-    project.startDate = dayjs(project.startDate)
-    setCurrentProject(project);
-    setProjectMode('edit');
-    setModalKey(`edit_${project._id}_${Date.now()}`);
-    
-    projectForm.setFieldsValue(project);
-    
-    setProjectModalVisible(true);
-    
-    console.log('编辑项目弹窗已打开');
+  // 🔧 修复：编辑项目时主动获取完整数据，确保包含附件信息
+  const handleEditProject = useCallback(async (project: Project) => {
+    try {
+      console.log('开始编辑项目，先获取完整数据:', project.projectName);
+      
+      // 🔧 修复：主动请求完整的项目数据，确保包含附件信息
+      const response = await api.get(`/api/projects/${project._id}`);
+      
+      if (response.success && response.project) {
+        console.log('获取到完整项目数据:', response.project);
+        
+        // 使用完整的项目数据
+        const fullProject = response.project;
+        fullProject.startDate = dayjs(fullProject.startDate);
+        
+        setCurrentProject(fullProject);
+        setProjectMode('edit');
+        setModalKey(`edit_${fullProject._id}_${Date.now()}`);
+        
+        // 使用完整数据设置表单
+        projectForm.setFieldsValue(fullProject);
+        setProjectModalVisible(true);
+        
+        console.log('编辑项目弹窗已打开，使用完整数据');
+        console.log('小批量附件数量:', fullProject.smallBatchAttachments?.length || 0);
+        console.log('批量出货附件数量:', fullProject.massProductionAttachments?.length || 0);
+      } else {
+        throw new Error('获取项目详情失败');
+      }
+    } catch (error) {
+      console.error('获取项目完整数据失败:', error);
+      message.error('获取项目详情失败，请重试');
+      
+      // 🔧 降级方案：如果API请求失败，仍然使用列表数据
+      console.log('降级使用列表数据进行编辑');
+      project.startDate = dayjs(project.startDate);
+      setCurrentProject(project);
+      setProjectMode('edit');
+      setModalKey(`edit_${project._id}_${Date.now()}`);
+      
+      projectForm.setFieldsValue(project);
+      setProjectModalVisible(true);
+    }
   }, [projectForm]);
 
   // 🔧 优化项目提交处理，使用稳定的mutateProjects引用
@@ -252,29 +237,29 @@ const ProjectManagement: React.FC = () => {
     try {
       const values = await projectForm.validateFields();
       setProjectLoading(true);
-      
+
       console.time('项目提交耗时');
-      
+
       if (projectMode === 'create') {
         const projectData = customerId ? { ...values, customerId } : values;
-        await api.post('/api/projects', projectData, { 
-          showSuccessMessage: true 
+        await api.post('/api/projects', projectData, {
+          showSuccessMessage: true
         });
       } else {
         await api.put(`/api/projects/${currentProject?._id}`, values, {
           showSuccessMessage: true
         });
       }
-      
+
       console.timeEnd('项目提交耗时');
-      
+
       // 🔧 延迟调用mutateProjects，避免与其他状态更新冲突
       setTimeout(() => {
         if (mutateProjects) {
           mutateProjects();
         }
       }, 100);
-      
+
       setProjectModalVisible(false);
       projectForm.resetFields();
       setCurrentProject(null);
@@ -287,40 +272,11 @@ const ProjectManagement: React.FC = () => {
   }, [projectForm, projectMode, customerId, currentProject, mutateProjects]);
 
   const handleProjectCancel = useCallback(() => {
-    console.log('取消项目操作，重置状态...');
-    
     setProjectModalVisible(false);
     projectForm.resetFields();
     setCurrentProject(null);
     setModalKey('');
-    
-    console.log('项目弹窗已关闭，状态已重置');
   }, [projectForm]);
-
-  // 🔧 优化性能监控 - 减少不必要的日志
-  useEffect(() => {
-    if (!customerLoading && !productsLoading && !projectsLoading) {
-      const shouldLog = Math.random() < 0.1; // 只有10%的概率打印日志，减少控制台噪音
-      
-      if (shouldLog) {
-        console.log('项目管理页面数据加载完成');
-        console.log(`客户数据: ${customer ? '已加载' : '无需加载'}`);
-        console.log(`产品数量: ${products.length}`);
-        console.log(`项目数量: ${projects.length}`);
-        console.log(`显示关联信息列: ${shouldShowRelatedColumns ? '是' : '否'}`);
-        console.log(`来源: ${routeState?.fromCustomerDetail ? '客户详情页' : '直接访问'}`);
-        console.log(`显示新建按钮: ${shouldShowCreateButton ? '是' : '否'}`);
-      }
-      
-      // 独立项目管理页面的统计信息
-      if (!customerId && shouldLog) {
-        console.log('独立项目管理页面，项目总数:', projects.length);
-        const relatedSalesCount = projects.filter(p => p.relatedSalesName && p.relatedSalesName !== '-').length;
-        const relatedAgentCount = projects.filter(p => p.relatedAgentName && p.relatedAgentName !== '-').length;
-        console.log(`有关联销售的项目: ${relatedSalesCount}，有关联代理商的项目: ${relatedAgentCount}`);
-      }
-    }
-  }, [customerLoading, productsLoading, projectsLoading, customer, products.length, projects.length, customerId, shouldShowRelatedColumns, routeState, shouldShowCreateButton]);
 
   // 如果是特定客户页面且客户信息加载中
   if (customerId && customerLoading) {
@@ -372,11 +328,11 @@ const ProjectManagement: React.FC = () => {
         </div>
 
         {/* 标题和操作区 */}
-        <div className={`${isMobile ? 'flex flex-col' : 'flex justify-between items-center'}`}>
-          <div className={`flex ${isMobile ? 'flex-col items-start' : 'items-center'}`}>
+        <div className={`flex ${isMobile ? 'flex-col' : 'flex justify-between items-center'}`}>
+          <div className={`flex items-center ${isMobile ? 'mb-2' : ''}`}>
             {customerId && (
-              <Button 
-                icon={<ArrowLeftOutlined />} 
+              <Button
+                icon={<ArrowLeftOutlined />}
                 onClick={handleGoBack}
                 className={`${isMobile ? 'mb-2' : 'mr-4'}`}
                 size={isMobile ? "middle" : "middle"}
@@ -396,24 +352,11 @@ const ProjectManagement: React.FC = () => {
               )}
             </div>
           </div>
-          
-          {/* 🆕 恢复：主页面的新建项目按钮 - 只在客户项目页面显示 */}
-           {/* {shouldShowCreateButton && (
-            <Button 
-              type="primary" 
-              icon={<PlusOutlined />}
-              onClick={handleAddProject}
-              size={isMobile ? "middle" : "middle"}
-              className={`${isMobile ? 'mt-2 self-end' : ''}`}
-            >
-              {isMobile ? '新建项目' : '为该客户新建项目'}
-            </Button>
-          )} */}
         </div>
       </div>
-      
+
       {/* 项目列表 */}
-      <Card 
+      <Card
         className="project-list-card"
         bodyStyle={{ padding: isMobile ? '12px' : '24px' }}
         title={
@@ -422,6 +365,13 @@ const ProjectManagement: React.FC = () => {
               <ProjectOutlined />
               <Text strong>全部项目列表</Text>
               <Text type="secondary">（包含关联客户、销售、代理商信息）</Text>
+              {/* 🆕 添加分页调试信息 */}
+              {serverPagination && (
+                <Text type="secondary" style={{ fontSize: '12px' }}>
+                  [Debug: 当前页{serverPagination.page}/{serverPagination.pages},
+                  数据{projects.length}/{serverPagination.total}]
+                </Text>
+              )}
             </Space>
           )
         }
@@ -434,7 +384,11 @@ const ProjectManagement: React.FC = () => {
           onEdit={handleEditProject}
           onAdd={handleAddProject}
           showRelatedColumns={shouldShowRelatedColumns}
-          showCreateButton={shouldShowCreateButton} // 🆕 传递新建按钮显示状态
+          showCreateButton={shouldShowCreateButton}
+          pagination={!customerId ? pagination : undefined}
+          serverPagination={!customerId ? serverPagination : undefined}
+          onPageChange={handlePageChange}
+          onShowSizeChange={handleShowSizeChange}
         />
       </Card>
 
@@ -468,11 +422,11 @@ const ProjectManagement: React.FC = () => {
           .project-management .ant-card {
             margin-bottom: 8px;
           }
-          
+
           .project-management .ant-breadcrumb {
             font-size: 12px;
           }
-          
+
           .project-list-card .ant-card-body {
             padding: 8px !important;
           }

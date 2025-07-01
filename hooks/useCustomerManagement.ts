@@ -10,6 +10,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { api } from '../utils/api';
 import { useData } from '../utils/dataFetcher';
 import { Customer, AgentBrief, UserRole } from '../shared/types';
+import { exportCustomersToExcel } from '../utils/fileUtils';
 
 export const useCustomerManagement = () => {
   const { user } = useAuth();
@@ -20,13 +21,14 @@ export const useCustomerManagement = () => {
   const [importForm] = Form.useForm();
   const [assignForm] = Form.useForm();
   
-  // 统一的查询条件对象
+  // 统一的查询条件对象 - 增加新的筛选维度
   const [queryParams, setQueryParams] = useState({
     keyword: '',
     nature: undefined,
     importance: undefined,
-    progress: undefined,
     isInPublicPool: undefined,
+    relatedSalesId: undefined, // 新增：关联销售筛选
+    relatedAgentId: undefined, // 新增：关联代理商筛选
     page: 1,
     limit: 10
   });
@@ -87,6 +89,7 @@ export const useCustomerManagement = () => {
     
     return params.toString();
   }, [queryParams]);
+  
   // 使用自定义 hook 获取客户数据
   const apiUrl = `/api/customers?${buildQueryString()}`;
   const { data, error, isLoading, mutate: refreshCustomers } = useData(apiUrl);
@@ -95,7 +98,7 @@ export const useCustomerManagement = () => {
   const customers = data?.customers || [];
   const pagination = data?.pagination || { 
     total: 0, 
-    page: queryParams.page, 
+    page: 1, 
     limit: queryParams.limit, 
     pages: 1 
   };
@@ -133,15 +136,16 @@ export const useCustomerManagement = () => {
     updateQueryParams({ [field]: value });
   };
   
-  // 重置所有筛选 - 简化版本
+  // 重置所有筛选 - 增加新的筛选字段
   const handleResetFilters = useCallback(() => {
     // 重置为初始状态，但保留每页数量
     updateQueryParams({
       keyword: '',
       nature: undefined,
       importance: undefined,
-      progress: undefined,
       isInPublicPool: undefined,
+      relatedSalesId: undefined, // 新增：重置关联销售筛选
+      relatedAgentId: undefined, // 新增：重置关联代理商筛选
       page: 1
     });
     
@@ -157,7 +161,6 @@ export const useCustomerManagement = () => {
     updateQueryParams(updates);
   };
   
-  // 其余函数保持不变...
   // 取消处理函数 - 用于关闭所有模态框
   const handleCancel = () => {
     // 使用单独的状态更新调用，避免状态更新合并导致需要多次点击
@@ -185,6 +188,7 @@ export const useCustomerManagement = () => {
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+      
       // 确保 annualDemand 是数字类型
       if (values.annualDemand) {
         values.annualDemand = Number(values.annualDemand);
@@ -405,13 +409,74 @@ export const useCustomerManagement = () => {
     setAvailableAgents(filterAgentsBySalesId(salesId));
   };
 
+  // 处理批量导出客户
+  const handleExportCustomers = useCallback(async () => {
+    console.log("customers",customers)
+    try {
+      if (!customers || customers.length === 0) {
+        message.warning('当前没有客户数据可以导出');
+        return;
+      }
+      
+      // 构建当前筛选条件的描述
+      const filterDescription = [];
+      if (queryParams.keyword) {
+        filterDescription.push(`关键词: ${queryParams.keyword}`);
+      }
+      if (queryParams.nature) {
+        filterDescription.push(`客户性质: ${queryParams.nature}`);
+      }
+      if (queryParams.importance) {
+        filterDescription.push(`重要程度: ${queryParams.importance}`);
+      }
+      if (queryParams.isInPublicPool !== undefined) {
+        filterDescription.push(`客户状态: ${queryParams.isInPublicPool ? '公海客户' : '私海客户'}`);
+      }
+      if (queryParams.relatedSalesId) {
+        const salesUser = salesUsers.find(s => s._id === queryParams.relatedSalesId);
+        filterDescription.push(`关联销售: ${salesUser?.username || queryParams.relatedSalesId}`);
+      }
+      if (queryParams.relatedAgentId) {
+        const agent = availableAgents.find(a => a._id === queryParams.relatedAgentId);
+        filterDescription.push(`关联代理商: ${agent?.companyName || queryParams.relatedAgentId}`);
+      }
+      
+      // 生成文件名
+      let filename = '客户数据导出';
+      if (filterDescription.length > 0) {
+        filename += `_${filterDescription.join('_')}`;
+      }
+      
+      // 为了避免文件名过长，限制长度
+      if (filename.length > 100) {
+        filename = `客户数据导出_筛选条件${filterDescription.length}项`;
+      }
+      
+      // 导出当前页面的客户数据
+      exportCustomersToExcel(customers, filename);
+      
+      message.success(`成功导出 ${customers.length} 条客户数据`);
+      
+      console.log('客户数据导出完成:', {
+        total: customers.length,
+        filters: filterDescription,
+        filename
+      });
+      
+    } catch (error) {
+      console.error('导出客户数据失败:', error);
+      message.error('导出失败: ' + (error.message || '未知错误'));
+    }
+  }, [customers, queryParams, salesUsers, availableAgents]);
+
   return {
-    // 状态
+    // 状态 - 增加新的筛选字段
     filters: {
       nature: queryParams.nature,
       importance: queryParams.importance,
-      progress: queryParams.progress,
-      isInPublicPool: queryParams.isInPublicPool
+      isInPublicPool: queryParams.isInPublicPool,
+      relatedSalesId: queryParams.relatedSalesId, // 新增
+      relatedAgentId: queryParams.relatedAgentId // 新增
     },
     keyword: queryParams.keyword,
     customers,
@@ -452,6 +517,7 @@ export const useCustomerManagement = () => {
     showImportModal,
     handleImportCustomers,
     handleSalesChange,
+    handleExportCustomers, // 新增导出方法
     refreshCustomers
   };
 };

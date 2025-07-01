@@ -146,6 +146,16 @@ export const parseProductFile = async (file: File): Promise<{
 };
 
 /**
+ * 安全地提取并去除前后空格的字符串值
+ */
+const safeExtractAndTrim = (value: any): string => {
+  if (value === null || value === undefined) {
+    return '';
+  }
+  return String(value).trim();
+};
+
+/**
  * 将Excel文件解析为客户数据
  */
 export const parseCustomerFile = async (file: File): Promise<{
@@ -354,11 +364,84 @@ export const parseCustomerFile = async (file: File): Promise<{
 };
 
 /**
- * 安全地提取并去除前后空格的字符串值
+ * 将客户数据导出为Excel文件
  */
-const safeExtractAndTrim = (value: any): string => {
-  if (value === null || value === undefined) {
-    return '';
+export const exportCustomersToExcel = (customers: Customer[], filename: string = '客户数据导出'): void => {
+  // 构建导出数据
+  const exportData = customers.map((customer, index) => ({
+    '序号': index + 1,
+    '客户名称': customer.name || '',
+    '客户性质': customer.nature || '',
+    '客户重要程度': customer.importance || '',
+    '应用领域': customer.applicationField || '',
+    '产品需求(产品名称，用逗号分隔)': Array.isArray(customer.productNeeds) ? customer.productNeeds.join(', ') : '',
+    '联系人': customer.contactPerson || '',
+    '联系方式': customer.contactPhone || '',
+    '公司地址': customer.address || '',
+    '客户进展': customer.progress || '',
+    '年需求量(片)': customer.annualDemand || 0,
+    '关联销售名称': customer.relatedSalesName || '',
+    '关联代理商名称': customer.relatedAgentName || '',
+    '客户状态': customer.isInPublicPool ? '公海客户' : '私海客户',
+    '创建人': customer.ownerName || '',
+    '创建时间': customer.createdAt ? new Date(customer.createdAt).toLocaleString('zh-CN') : '',
+    '最后更新时间': customer.updatedAt ? new Date(customer.updatedAt).toLocaleString('zh-CN') : ''
+  }));
+
+  // 创建工作簿
+  const workbook = XLSX.utils.book_new();
+  
+  // 创建工作表
+  const worksheet = XLSX.utils.json_to_sheet(exportData);
+  
+  // 设置列宽
+  const columnWidths = [
+    { wch: 6 },   // 序号
+    { wch: 20 },  // 客户名称
+    { wch: 15 },  // 客户性质
+    { wch: 12 },  // 客户重要程度
+    { wch: 15 },  // 应用领域
+    { wch: 25 },  // 产品需求
+    { wch: 12 },  // 联系人
+    { wch: 15 },  // 联系方式
+    { wch: 30 },  // 公司地址
+    { wch: 10 },  // 客户进展
+    { wch: 12 },  // 年需求量
+    { wch: 15 },  // 关联销售名称
+    { wch: 15 },  // 关联代理商名称
+    { wch: 10 },  // 客户状态
+    { wch: 12 },  // 创建人
+    { wch: 18 },  // 创建时间
+    { wch: 18 }   // 最后更新时间
+  ];
+  
+  worksheet['!cols'] = columnWidths;
+  
+  // 添加工作表到工作簿
+  XLSX.utils.book_append_sheet(workbook, worksheet, '客户数据');
+  
+  // 生成文件名（包含导出时间）
+  const timestamp = new Date(2025, 5, 30, 20, 34)
+  .toLocaleString("zh-CN", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false, // 24小时制
+  })
+  .replace(/\//g, "年") // 替换 / 为 "年"
+  .replace(/\s/g, "日") // 替换空格为 "日"
+  .replace(/:/g, "点") + "分"; // 替换 : 为 "点" 并补上 "分"
+  
+  const finalFilename = `${filename}_${timestamp}.xlsx`;
+  
+  try {
+    // 导出文件
+    XLSX.writeFile(workbook, finalFilename);
+    console.log(`客户数据导出成功: ${finalFilename}`);
+  } catch (error) {
+    console.error('客户数据导出失败:', error);
+    throw new Error('导出失败，请重试');
   }
-  return String(value).trim();
 };

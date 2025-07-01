@@ -2,7 +2,7 @@
  * 项目列表组件
  * 显示客户的所有项目，根据显示模式控制关联信息列的显示
  */
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { 
   Table, 
   Button, 
@@ -39,18 +39,27 @@ interface ProjectListProps {
   onRefresh: () => void;
   onEdit: (project: Project) => void;
   onAdd: () => void;
-  showRelatedColumns?: boolean; // 控制是否显示关联信息列
-  showCreateButton?: boolean; // 🆕 控制是否显示新建项目按钮
+  showRelatedColumns?: boolean;
+  showCreateButton?: boolean;
+  pagination?: { page: number; limit: number };
+  serverPagination?: { page: number; limit: number; total: number; pages: number } | null;
+  onPageChange?: (page: number, pageSize?: number) => void;
+  onShowSizeChange?: (current: number, size: number) => void;
 }
 
 const ProjectList: React.FC<ProjectListProps> = ({
+  customerId,
   projects,
   loading,
   onRefresh,
   onEdit,
   onAdd,
-  showRelatedColumns = true, // 默认显示关联信息列
-  showCreateButton = false // 🆕 默认不显示新建按钮
+  showRelatedColumns = true,
+  showCreateButton = false,
+  pagination,
+  serverPagination,
+  onPageChange,
+  onShowSizeChange
 }) => {
   const { user } = useAuth();
   const { isMobile } = useResponsive();
@@ -59,13 +68,11 @@ const ProjectList: React.FC<ProjectListProps> = ({
   const [deletingProject, setDeletingProject] = useState<Project | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // 格式化时间显示（支持时分秒）
   const formatDateTime = (dateTime: string | Date, showTime: boolean = false) => {
     if (!dateTime) return '-';
     const date = new Date(dateTime);
     
     if (showTime) {
-      // 移动端显示简化版，桌面端显示完整版
       return date.toLocaleString('zh-CN', {
         year: 'numeric',
         month: '2-digit',
@@ -84,7 +91,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
     }
   };
 
-  // 获取进展状态的颜色
   const getProgressColor = (progress: ProjectProgress) => {
     const colorMap = {
       [ProjectProgress.SAMPLE_EVALUATION]: 'purple',
@@ -96,7 +102,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
     return colorMap[progress] || 'default';
   };
 
-  // 格式化金额显示
   const formatAmount = (amount: number) => {
     if (amount === 0) return '-';
     
@@ -118,7 +123,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
     return formatted;
   };
 
-  // 检查用户权限
   const canEdit = () => {
     if (!user) return false;
     return user.role === UserRole.SUPER_ADMIN || 
@@ -131,7 +135,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
     return user.role === UserRole.SUPER_ADMIN;
   };
 
-  // 🔧 检查是否可以新建项目
   const canCreateProject = () => {
     if (!user) return false;
     return user.role === UserRole.SUPER_ADMIN || 
@@ -139,7 +142,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
            user.role === UserRole.AGENT;
   };
 
-  // 处理查看详情 - 增加错误处理和调试信息
   const handleViewDetail = (project: Project) => {
     console.log('查看项目详情，项目ID:', project._id);
     console.log('项目信息:', project);
@@ -157,7 +159,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
     }
   };
 
-  // 处理删除项目
   const handleDelete = (project: Project) => {
     setDeletingProject(project);
     setDeleteModalVisible(true);
@@ -183,7 +184,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
     }
   };
 
-  // 表格列定义 - 根据 showRelatedColumns 控制关联信息列的显示
   const baseColumns = [
     {
       title: '项目名称',
@@ -273,9 +273,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
     },
   ];
 
-  // 关联信息列 - 只在需要时显示
   const relatedColumns = showRelatedColumns ? [
-    // 关联客户名称列
     {
       title: (
         <Space>
@@ -293,7 +291,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
         </Tooltip>
       ),
     },
-    // 关联销售列
     {
       title: (
         <Space>
@@ -313,7 +310,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
         </Tooltip>
       ),
     },
-    // 关联代理商列
     {
       title: (
         <Space>
@@ -335,7 +331,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
     },
   ] : [];
 
-  // 其他固定列
   const endColumns = [
     {
       title: '创建人',
@@ -385,10 +380,8 @@ const ProjectList: React.FC<ProjectListProps> = ({
     },
   ];
 
-  // 组合完整的列配置
   const columns = [...baseColumns, ...relatedColumns, ...endColumns];
 
-  // 移动端显示更简洁的列 - 根据是否显示关联信息调整
   const mobileColumns = columns.filter(col => {
     const key = col.key as string;
     if (showRelatedColumns) {
@@ -398,15 +391,99 @@ const ProjectList: React.FC<ProjectListProps> = ({
     }
   });
 
+  const paginationConfig = useMemo(() => {
+    if (customerId) {
+      return {
+        pageSize: isMobile ? 5 : 10,
+        showSizeChanger: !isMobile,
+        showQuickJumper: !isMobile,
+        showTotal: (total: number, range: [number, number]) => 
+          `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+        pageSizeOptions: ['5', '10', '20', '50'],
+      };
+    }
+    
+    if (pagination && serverPagination && onPageChange && onShowSizeChange) {
+      console.log('[分页配置] 使用服务端分页信息:', {
+        serverPagination,
+        projectsLength: projects.length,
+        clientPagination: pagination
+      });
+      
+      const actualPageSize = serverPagination.limit;
+      const actualCurrent = serverPagination.page;
+      const actualTotal = serverPagination.total;
+      
+      if (projects.length > actualPageSize) {
+        console.warn('[分页配置] 数据异常：当前页数据量超过页面大小', {
+          projectsLength: projects.length,
+          pageSize: actualPageSize
+        });
+      }
+      
+      return {
+        current: actualCurrent,
+        pageSize: actualPageSize,
+        total: actualTotal,
+        showSizeChanger: !isMobile,
+        showQuickJumper: !isMobile,
+        showTotal: (total: number, range: [number, number]) => 
+          `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+        pageSizeOptions: ['5', '10', '20', '50'],
+        onChange: (page: number, pageSize?: number) => {
+          console.log('[分页变化] 页码变化:', { page, pageSize });
+          if (onPageChange) {
+            onPageChange(page, pageSize);
+          }
+        },
+        onShowSizeChange: (current: number, size: number) => {
+          console.log('[分页变化] 页面大小变化:', { current, size });
+          if (onShowSizeChange) {
+            onShowSizeChange(current, size);
+          }
+        },
+      };
+    }
+    
+    if (pagination && onPageChange && onShowSizeChange) {
+      console.log('[分页配置] 使用降级分页配置，当前项目数:', projects.length);
+      
+      return {
+        current: pagination.page,
+        pageSize: pagination.limit,
+        showSizeChanger: !isMobile,
+        showQuickJumper: !isMobile,
+        showTotal: (total: number, range: [number, number]) => 
+          `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+        pageSizeOptions: ['5', '10', '20', '50'],
+        onChange: onPageChange,
+        onShowSizeChange: onShowSizeChange,
+      };
+    }
+    
+    return {
+      pageSize: isMobile ? 5 : 10,
+      showSizeChanger: !isMobile,
+      showQuickJumper: !isMobile,
+      showTotal: (total: number, range: [number, number]) => 
+        `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
+      pageSizeOptions: ['5', '10', '20', '50'],
+    };
+  }, [customerId, pagination, serverPagination, onPageChange, onShowSizeChange, isMobile, projects.length]);
+
   return (
     <>
       <div className="mb-4 flex justify-between items-center">
         <div>
           <Text strong>项目列表</Text>
           <Text type="secondary" className="ml-2">
-            共 {projects.length} 个项目
+            {customerId 
+              ? `共 ${projects.length} 个项目` 
+              : serverPagination 
+                ? `第 ${serverPagination.page}/${serverPagination.pages} 页 (共 ${serverPagination.total} 条)`
+                : `第 ${pagination?.page || 1} 页 (每页 ${pagination?.limit || 10} 条)`
+            }
           </Text>
-          {/* 提示用户当前显示模式 */}
           {!showRelatedColumns && (
             <Text type="secondary" className="ml-2 text-xs">
               (隐藏关联信息列)
@@ -414,7 +491,6 @@ const ProjectList: React.FC<ProjectListProps> = ({
           )}
         </div>
         
-        {/* 🆕 恢复新建项目按钮 - 根据传入的 showCreateButton 控制显示 */}
         {showCreateButton && canCreateProject() && (
           <Button 
             type="primary" 
@@ -432,13 +508,7 @@ const ProjectList: React.FC<ProjectListProps> = ({
         columns={isMobile ? mobileColumns : columns}
         rowKey="_id"
         loading={loading}
-        pagination={{
-          pageSize: isMobile ? 5 : 10,
-          showSizeChanger: !isMobile,
-          showQuickJumper: !isMobile,
-          showTotal: (total, range) => 
-            `第 ${range[0]}-${range[1]} 条/共 ${total} 条`,
-        }}
+        pagination={paginationConfig}
         scroll={{ 
           x: isMobile 
             ? (showRelatedColumns ? 800 : 600) 

@@ -14,6 +14,7 @@ import {
 import { 
   PlusOutlined, 
   UploadOutlined,
+  DownloadOutlined,
   SearchOutlined
 } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
@@ -21,6 +22,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useResponsive } from '../hooks/useResponsive';
 import { useCustomerManagement } from '../hooks/useCustomerManagement';
 import { api } from '../utils/api';
+import { UserRole } from '../shared/types';
 
 // 导入子组件
 import CustomerFilters from '../components/customers/CustomerFilters';
@@ -31,10 +33,11 @@ import CustomerImportForm, { CustomerImportFormRef } from '../components/custome
 import CustomerNameValidator from '../components/customers/CustomerNameValidator';
 
 const CustomerManagement: React.FC = () => {
-  const { hasPermission } = useAuth();
+  const { hasPermission, user } = useAuth();
   const navigate = useNavigate();
   const { isMobile } = useResponsive();
   const [importBtnLoading, setImportBtnLoading] = useState(false);
+  const [exportBtnLoading, setExportBtnLoading] = useState(false);
   const [nameValidatorVisible, setNameValidatorVisible] = useState(false);
   const importFormRef = useRef<CustomerImportFormRef>(null);
   
@@ -79,7 +82,8 @@ const CustomerManagement: React.FC = () => {
     handleAssignCustomer,
     showImportModal,
     handleSalesChange,
-    refreshCustomers
+    refreshCustomers,
+    handleExportCustomers, // 新增导出方法
   } = useCustomerManagement();
 
   // 新增查看客户项目函数
@@ -182,7 +186,7 @@ const CustomerManagement: React.FC = () => {
       
       importFormRef.current?.setImportResultStatus({
         success: false,
-        message: '导入失败: ' + (error.error || error.message || '未知错误'),
+        message: '导入失败: ' + (error.message || '未知错误'),
         errors: error.errors || []
       }, 100, 'error');
     } finally {
@@ -190,11 +194,22 @@ const CustomerManagement: React.FC = () => {
     }
   };
 
-  // 关闭导入弹窗并重置表单
-  const handleCloseImportModal = () => {
-    handleCancel();
-    importForm.resetFields();
+  // 增强版的导出处理函数，增加加载状态控制
+  const handleExportWithLoading = async () => {
+    setExportBtnLoading(true);
+    
+    try {
+      await handleExportCustomers();
+    } catch (error) {
+      console.error('导出客户数据失败:', error);
+      message.error('导出失败: ' + (error.message || '未知错误'));
+    } finally {
+      setExportBtnLoading(false);
+    }
   };
+
+  // 判断是否为超级管理员
+  const isAdmin = user?.role === UserRole.SUPER_ADMIN;
 
   return (
     <div className="p-4">
@@ -228,6 +243,18 @@ const CustomerManagement: React.FC = () => {
               onClick={showImportModal}
             >
               批量导入
+            </Button>
+          )}
+
+          {/* 批量导出按钮 - 仅超级管理员在PC端可见 */}
+          {!isMobile && isAdmin && (
+            <Button 
+              icon={<DownloadOutlined />} 
+              onClick={handleExportWithLoading}
+              loading={exportBtnLoading}
+              className="border-green-500 text-green-500 hover:bg-green-50"
+            >
+              批量导出
             </Button>
           )}
         </Space>
@@ -328,7 +355,7 @@ const CustomerManagement: React.FC = () => {
         title="批量导入客户"
         open={importModalVisible}
         onOk={handleImportWithLoading}
-        onCancel={handleCloseImportModal}
+        onCancel={handleCancel}
         okText="导入"
         okButtonProps={{ 
           icon: <UploadOutlined />,
